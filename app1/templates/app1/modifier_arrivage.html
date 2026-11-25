@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Ajouter un Arrivage</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'django_select2/css/django_select2.css' %}">
+    <link rel="stylesheet" href="{% static 'css/arr.css' %}">
+   <style>
+        /* Styles existants */
+        .back-button {
+            background-color: #b5b5b5;
+            color: rgb(7, 7, 7);
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+            font-size: 16px;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            border: none;
+            margin-bottom: 700px;
+        }
+
+        .back-button:hover {
+            background-color: #434343;
+        }
+
+        .back-button::before {
+            content: "❮";
+            font-size: 18px;
+        }
+
+        .form-container {
+            margin-top: 20px;
+        }
+
+        .select2-container {
+            width: 100% !important;
+        }
+
+        /* --- NOUVEAUX STYLES POUR SELECT2 --- */
+
+        /* Styles généraux pour le champ Select2 (quand il n'est pas ouvert) */
+        .select2-container .select2-selection--single,
+        .select2-container .select2-selection--multiple {
+            background-color: #444; /* Fond plus sombre pour le champ lui-même */
+            border: 1px solid #666; /* Bordure un peu plus claire */
+            color: #eee; /* Texte blanc clair pour le placeholder et les tags sélectionnés */
+            height: 38px; /* Ajuster la hauteur si nécessaire */
+        }
+
+        /* Texte du placeholder */
+        .select2-container .select2-selection__placeholder {
+            color: #ccc !important; /* Texte de placeholder gris clair */
+        }
+
+        /* Style des tags sélectionnés (pour les multi-select comme Comptables Concernés) */
+        .select2-container .select2-selection--multiple .select2-selection__choice {
+            background-color: #007bff; /* Couleur de fond du tag (bleu par exemple) */
+            color: white; /* Couleur du texte du tag */
+            border: 1px solid #0056b3; /* Bordure du tag */
+            padding: 2px 5px; /* Espacement interne */
+            margin-top: 5px; /* Espacement entre les tags */
+        }
+
+        /* Bouton de suppression du tag (le 'x') */
+        .select2-container .select2-selection--multiple .select2-selection__choice__remove {
+            color: white !important; /* Couleur du 'x' blanc */
+        }
+        .select2-container .select2-selection--multiple .select2-selection__choice__remove:hover {
+            color: #f8d7da !important; /* Rouge clair au survol */
+        }
+
+
+        /* Styles du menu déroulant quand il est ouvert */
+        .select2-container--open .select2-dropdown {
+            background-color: #444; /* Fond du menu déroulant ouvert */
+            border: 1px solid #666; /* Bordure du menu déroulant */
+        }
+
+        /* Options dans le menu déroulant */
+        .select2-container .select2-results__option {
+            color: #eee; /* Couleur du texte des options (blanc clair) */
+            background-color: #444; /* Fond par défaut des options */
+        }
+
+        /* Option survolée/mise en surbrillance */
+        .select2-container .select2-results__option--highlighted {
+            background-color: #007bff !important; /* Fond bleu vif au survol */
+            color: white !important; /* Texte blanc au survol */
+        }
+
+        /* Option sélectionnée dans le menu déroulant (pour le single-select) */
+        .select2-container .select2-results__option--selected {
+            background-color: #0056b3 !important; /* Bleu plus foncé si déjà sélectionné */
+            color: white !important;
+        }
+
+        /* Bouton de la flèche déroulante */
+        .select2-container .select2-selection__arrow b {
+            border-color: #ccc transparent transparent transparent !important; /* Couleur de la flèche */
+        }
+        .select2-container--open .select2-selection__arrow b {
+            border-color: transparent transparent #ccc transparent !important; /* Couleur de la flèche quand ouvert */
+        }
+
+        /* Champ de recherche à l'intérieur du Select2 */
+        .select2-search__field {
+            background-color: #333 !important; /* Fond du champ de recherche */
+            color: #eee !important; /* Texte du champ de recherche */
+            border: 1px solid #555 !important; /* Bordure du champ de recherche */
+        }
+        /* Style du résultat sélectionné après que le menu soit fermé */
+        .select2-selection__rendered {
+            color: #eee !important;
+        }
+        /* Style des "tags" (éléments choisis) quand le select2 n'est pas en focus */
+        .select2-selection__choice {
+            color: white !important; /* Make sure the text inside the tags is white */
+        }
+
+    </style>
+</head>
+<body>
+    <button class="back-button" onclick="window.history.back();">Retour</button>
+    <h2>Modifier  un Arrivage</h2>
+    <form method="post" class="form-container">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit">Ajouter</button>
+    </form>
+
+    {# ONLY include jQuery from CDN #}
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    {# ONLY include Select2 JS from CDN (after jQuery) #}
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+
+    {# Your custom JavaScript for Select2 initialization #}
+    <script>
+        $(document).ready(function() {
+            // Initialize Select2 on the 'comptables' field by its ID
+            // The 'id_comptables' comes from Django's auto-generated IDs
+            $('#id_comptables').select2({
+                placeholder: "Sélectionnez les comptables", // Text shown when nothing is selected
+                closeOnSelect: false, // Keep the dropdown open after selecting an item
+                // You might also want to add minimumInputLength for search, or tags: true for new entries
+                // tags: true, // Allows users to add new comptables if needed (careful with data integrity)
+                // minimumInputLength: 2, // Require at least 2 characters to start searching
+            });
+
+            // Initialize Select2 on the 'poste' field if you want it to also be searchable
+            // If it's a single select, remove closeOnSelect: false
+            $('#id_poste').select2({
+                placeholder: "Sélectionnez un poste",
+                allowClear: true // Option to clear the selection
+            });
+
+            // If you have 'Type de Pièce' as a dropdown, you might want to enable Select2 for it too
+            $('#id_type_piece').select2({
+                placeholder: "Sélectionnez un type de pièce",
+                allowClear: true
+            });
+        });
+    </script>
+
+</body>
+</html>

@@ -1,0 +1,707 @@
+{% extends 'base.html' %}
+
+{# Make sure your base.html includes Bootstrap CSS and JS! #}
+
+{% load i18n %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+<style>
+    /*
+    * Custom styles for the Alerts and Delays page
+    * Enhancements for responsiveness, accessibility, and visual appeal
+    */
+
+    :root {
+        --primary-color: #3498db;
+        --secondary-color: #2c3e50;
+        --text-color: #333;
+        --light-bg: #f9f9f9;
+        --white-bg: #ffffff;
+        --border-color: #dee2e6;
+        --shadow-light: rgba(0, 0, 0, 0.05);
+        --shadow-medium: rgba(0, 0, 0, 0.1);
+        --danger-color: #e74c3c;
+        --warning-color: #f39c12;
+        --success-color: #27ae60;
+        --info-color: #17a2b8;
+    }
+
+    body {
+        font-family: 'Open Sans', sans-serif;
+        color: var(--text-color);
+        background-color: #e9ecef; /* A slightly softer background for the whole page */
+    }
+
+    /* General container styling */
+    .alertes-custom-container {
+        background-color: var(--white-bg);
+        padding: 30px; /* Increased padding for more breathing room */
+        border-radius: 10px; /* Slightly more rounded corners */
+        box-shadow: 0 4px 15px var(--shadow-light); /* Softer, more spread-out shadow */
+        margin-top: 50px; /* Add some top margin */
+        margin-bottom: 30px;
+        max-width: 100%; /* Set a reasonable max-width for the main container */
+        margin-left: auto;
+        margin-right: auto;
+    }
+
+    /* Title styling */
+    .alertes-custom-title {
+        color: var(--secondary-color);
+        margin-bottom: 30px; /* More space below titles */
+        border-bottom: 4px solid var(--primary-color); /* Thicker, more prominent border */
+        padding-bottom: 12px; /* More padding below the border */
+        font-size: 2em; /* Slightly larger main title */
+        font-weight: 700; /* Bolder font weight */
+        display: flex;
+        align-items: center;
+    }
+
+    .alertes-custom-title.mt-5 {
+        font-size: 1.6em; /* Slightly smaller for sub-titles */
+        border-bottom: 2px solid var(--primary-color);
+        padding-bottom: 8px;
+        margin-top: 40px !important; /* Ensure good spacing for section titles */
+    }
+
+    .alertes-custom-title i {
+        margin-right: 10px; /* Space between icon and text */
+        color: var(--primary-color);
+    }
+
+    /* Custom alert box styles */
+    .alerte-imminente-custom {
+        background-color: #fffde7; /* Lighter warning background */
+        color: #b78c00; /* Darker, less vibrant warning text */
+        padding: 18px; /* More padding */
+        margin-bottom: 20px;
+        border: 1px solid #ffecb3; /* Softer border */
+        border-left: 5px solid var(--warning-color); /* Stronger left border accent */
+        border-radius: 8px;
+        font-weight: 500;
+        display: flex;
+        align-items: center;
+        gap: 15px; /* Space between icon and text */
+    }
+
+    .alerte-depassee-custom {
+        background-color: #ffebee; /* Lighter danger background */
+        color: #b71c1c; /* Darker, less vibrant danger text */
+        padding: 18px;
+        margin-bottom: 20px;
+        border: 1px solid #ef9a9a;
+        border-left: 5px solid var(--danger-color);
+        border-radius: 8px;
+        font-weight: 500;
+        display: flex;
+        align-items: center;
+        gap: 15px;
+    }
+
+    .alerte-aucune-custom {
+        background-color: #e8f5e9; /* Lighter success background */
+        color: #2e7d32; /* Darker, less vibrant success text */
+        padding: 18px;
+        margin-bottom: 20px;
+        border: 1px solid #a5d6a7;
+        border-left: 5px solid var(--success-color);
+        border-radius: 8px;
+        font-weight: 500;
+        display: flex;
+        align-items: center;
+        gap: 15px;
+    }
+
+    .alerte-custom-icon {
+        font-size: 1.5em; /* Larger icons for alerts */
+        opacity: 0.7; /* Slightly faded icons */
+    }
+
+
+   
+
+    /* Table styles */
+    .table {
+        border-collapse: separate;
+        border-spacing: 0;
+        margin-top: 25px;
+        box-shadow: 0 4px 12px var(--shadow-light);
+        border-radius: 8px;
+        width: 100%;
+        max-width: 100%; /* Ensure it doesn't exceed parent width */
+    }
+
+    .table thead th {
+        background-color: var(--secondary-color);
+        color: var(--white-bg);
+        font-weight: 600;
+        text-transform: uppercase;
+        font-size: 0.85em; /* Slightly smaller header text */
+        padding: 18px 12px; /* More padding */
+        border-bottom: 2px solid #253342; /* Darker border */
+        vertical-align: middle;
+        position: relative;
+    }
+
+    .table thead th.filterable,
+    .table thead th.sortable { /* Added sortable class */
+        padding-right: 40px; /* More space for icon */
+        cursor: pointer;
+        transition: background-color 0.2s ease;
+    }
+
+    .table thead th.filterable:hover,
+    .table thead th.sortable:hover { /* Added sortable class */
+        background-color: #3f5872; /* Slightly lighter on hover */
+    }
+
+    .table thead th .filter-icon,
+    .table thead th .sort-icon { /* Added sort-icon */
+        position: absolute;
+        right: 15px;
+        top: 50%;
+        transform: translateY(-50%);
+        font-size: 0.9em;
+        color: rgba(255, 255, 255, 0.8);
+        transition: color 0.2s ease, transform 0.2s ease;
+    }
+
+    .table thead th.filterable:hover .filter-icon,
+    .table thead th.filterable.active .filter-icon,
+    .table thead th.sortable:hover .sort-icon, /* Added sortable class */
+    .table thead th.sortable.asc .sort-icon,
+    .table thead th.sortable.desc .sort-icon {
+        color: var(--primary-color);
+        transform: translateY(-50%) scale(1.1); /* Slight grow effect */
+    }
+
+    /* Specific styles for sort icons */
+    .table thead th.sortable.asc .sort-icon:before {
+        content: "\f0d8"; /* Font Awesome caret-up */
+    }
+    .table thead th.sortable.desc .sort-icon:before {
+        content: "\f0d7"; /* Font Awesome caret-down */
+    }
+
+    /* Filter Dropdown Styles */
+    .filter-dropdown {
+        position: absolute;
+        top: 100%;
+        left: 0;
+        z-index: 1000;
+        background-color: var(--white-bg);
+        border: 1px solid #ccc;
+        border-radius: 6px;
+        box-shadow: 0 6px 12px var(--shadow-medium);
+        min-width: 200px;
+        padding: 15px;
+        display: none;
+        max-height: 300px; /* Increased height for more options */
+        overflow-y: auto;
+        color: var(--text-color);
+    }
+
+    .filter-dropdown label {
+        display: flex; /* Use flexbox for alignment */
+        align-items: center;
+        margin-bottom: 8px; /* More space between checkboxes */
+        font-weight: normal;
+        font-size: 0.95em;
+        cursor: pointer;
+    }
+
+    .filter-dropdown input[type="checkbox"] {
+        margin-right: 10px; /* More space for checkbox */
+        transform: scale(1.1); /* Slightly larger checkboxes */
+    }
+
+    .filter-dropdown button {
+        width: 100%;
+        margin-top: 15px; /* More space above button */
+        font-size: 0.95em;
+        padding: 8px 15px; /* More padding for button */
+        border-radius: 5px;
+    }
+
+    .table tbody tr {
+        background-color: var(--white-bg);
+        transition: all 0.2s ease-in-out;
+    }
+
+    .table tbody tr:hover {
+        background-color: #f0f8ff; /* Lighter blue on hover */
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.07);
+    }
+
+    .table tbody td {
+        padding: 15px 12px; /* More padding for table cells */
+        vertical-align: middle;
+        border-top: 1px solid #ebf0f5; /* Lighter border color */
+        font-size: 0.9em; /* Slightly smaller text for data cells */
+    }
+
+    .table-striped tbody tr:nth-of-type(odd) {
+        background-color: var(--light-bg); /* Use the defined light background */
+    }
+
+    /* Specific style for the "Trimestres Concernés" column to align it nicely */
+    .table tbody td:nth-child(4) {
+        text-align: center;
+        font-weight: 500;
+        color: #555;
+    }
+
+    /* Badges in the table */
+    .table .badge {
+        padding: 7px 12px; /* More padding for badges */
+        font-size: 0.8em; /* Slightly smaller badge text */
+        border-radius: 20px; /* Fully rounded badges */
+        font-weight: 700; /* Bolder badge text */
+        min-width: 90px; /* Give badges a minimum width for consistency */
+        display: inline-block;
+        text-align: center;
+    }
+
+    /* Specific styling for the table-danger row */
+    .table-danger {
+        background-color: #fef0f0 !important; /* Very light red for the whole row */
+        border-left: 6px solid var(--danger-color); /* Thicker red border on the left for emphasis */
+    }
+
+    .table-danger:hover {
+        background-color: #fae4e4 !important; /* Slightly darker red on hover */
+    }
+
+    /* Delay cell styling */
+    .delay-cell {
+        font-weight: 600; /* Bolder delay values */
+        text-align: center;
+        font-size: 1.0em; /* Slightly larger font for delay values */
+    }
+
+    .delay-positive {
+        color: var(--danger-color); /* Use defined danger color */
+    }
+
+    .delay-negative {
+        color: var(--info-color); /* Use defined info color */
+    }
+
+    .delay-zero {
+        color: var(--success-color); /* Use defined success color */
+    }
+
+    /* Empty state styling */
+    .alert.alert-info {
+        background-color: #e0f2f7; /* Lighter info background */
+        color: #01579b; /* Darker info text */
+        border-color: #b3e5fc;
+        border-left: 5px solid #03a9f4; /* Stronger info accent */
+        border-radius: 8px;
+        padding: 20px;
+        font-size: 1.1em;
+        text-align: center;
+    }
+
+    /* Responsive adjustments */
+    @media (max-width: 992px) {
+        .alertes-custom-container {
+            padding: 20px;
+            margin: 20px auto;
+        }
+
+        .table thead th {
+            font-size: 0.8em;
+            padding: 12px 8px;
+        }
+
+        .table tbody td {
+            font-size: 0.85em;
+            padding: 10px 8px;
+        }
+
+        .alertes-custom-title {
+            font-size: 1.8em;
+        }
+
+        .alertes-custom-title.mt-5 {
+            font-size: 1.4em;
+        }
+    }
+
+    @media (max-width: 768px) {
+        .table-responsive {
+            display: block;
+            width: 100%;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .table-responsive > .table-bordered {
+            border: 0;
+        }
+
+        .table-responsive > .table-bordered > thead > tr > th:first-child,
+        .table-responsive > .table-bordered > tbody > tr > td:first-child {
+            border-left: 0;
+        }
+
+        .table-responsive > .table-bordered > thead > tr > th:last-child,
+        .table-responsive > .table-bordered > tbody > tr > td:last-child {
+            border-right: 0;
+        }
+
+        .prochaines-deadlines-list {
+            grid-template-columns: 1fr; /* Single column on smaller screens */
+        }
+
+        .alertes-custom-title {
+            font-size: 1.5em;
+        }
+    }
+
+    @media (max-width: 576px) {
+        .alertes-custom-container {
+            padding: 15px;
+            margin: 15px auto;
+        }
+
+        .alertes-custom-title {
+            font-size: 1.3em;
+            text-align: center;
+            display: block; /* Stack icon and text */
+        }
+
+        .alertes-custom-title i {
+            margin-right: 0;
+            margin-bottom: 5px; /* Space below icon */
+        }
+
+        .alerte-imminente-custom,
+        .alerte-depassee-custom,
+        .alerte-aucune-custom {
+            flex-direction: column; /* Stack icon and text in alerts */
+            text-align: center;
+            gap: 10px;
+        }
+    }
+</style>
+
+{# IMPORTANT: Include Font Awesome for icons. Add this in your base.html's <head> or here. #}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"
+    integrity="sha512-..." crossorigin="anonymous" referrerpolicy="no-referrer" />
+
+<div class="container alertes-custom-container">
+    <h1 class="alertes-custom-title">
+        <i class="fas fa-exclamation-triangle"></i> {% translate "Alertes de Délais" %}
+    </h1>
+
+
+    {% if arrivages_with_delays %}
+    <div class="table-responsive"> {# Added responsive wrapper for better mobile experience #}
+        <table class="table table-striped table-bordered" id="arrivagesDelayTable">
+            <thead class="table-dark">
+                <tr>
+                    <th >{% trans "Arrivage ID" %}
+                    </th>
+                    <th class="sortable" data-column-index="1" data-column-type="date">{% trans "Date Arrivage" %}
+                        <span class="sort-icon fas fa-sort"></span>
+                    </th>
+                    <th class="filterable" data-column-index="2" data-column-type="text">{% trans "Poste Comptable" %}
+                        <span class="filter-icon fas fa-filter"></span>
+                        <div class="filter-dropdown" id="filterDropdown-2"></div>
+                    </th>
+                    <th>{% trans "Trimestres Concernés" %}</th>
+                    <th>{% trans "Délai T1" %}</th>
+                    <th>{% trans "Délai T2" %}</th>
+                    <th>{% trans "Délai T3" %}</th>
+                    <th>{% trans "Délai T4" %}</th>
+                    <th class="filterable" data-column-index="8" data-column-type="text">{% trans "Statut Général" %}
+                        <span class="filter-icon fas fa-filter"></span>
+                        <div class="filter-dropdown" id="filterDropdown-8"></div>
+                    </th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in arrivages_with_delays %}
+                <tr {% if item.is_late %}class="table-danger"{% endif %}>
+                    <td data-raw-value="{{ item.arrivage.id }}">{{ item.arrivage.id }}</td>
+                    <td data-raw-value="{{ item.arrivage.date_arrivage|date:"Y-m-d" }}">
+                        {{ item.arrivage.date_arrivage|date:"d/m/Y" }}</td>
+                    <td>{{ item.arrivage.poste }}</td>
+                    <td>
+                        {% for trimestre in item.arrivage.trimestres.all %}
+                        T{{ trimestre.numero }}{% if not forloop.last %}, {% endif %}
+                        {% endfor %}
+                    </td>
+                    {# Apply specific styling based on delay value #}
+                    <td
+                        class="delay-cell {% if item.delays.T1 and item.delays.T1|slice:"0:1" == '+' %}delay-positive{% elif item.delays.T1 and item.delays.T1|slice:"0:1" == '0' %}delay-zero{% endif %}">
+                        {{ item.delays.T1 }}
+                    </td>
+                    <td
+                        class="delay-cell {% if item.delays.T2 and item.delays.T2|slice:"0:1" == '+' %}delay-positive{% elif item.delays.T2 and item.delays.T2|slice:"0:1" == '0' %}delay-zero{% endif %}">
+                        {{ item.delays.T2 }}
+                    </td>
+                    <td
+                        class="delay-cell {% if item.delays.T3 and item.delays.T3|slice:"0:1" == '+' %}delay-positive{% elif item.delays.T3 and item.delays.T3|slice:"0:1" == '0' %}delay-zero{% endif %}">
+                        {{ item.delays.T3 }}
+                    </td>
+                    <td
+                        class="delay-cell {% if item.delays.T4 and item.delays.T4|slice:"0:1" == '+' %}delay-positive{% elif item.delays.T4 and item.delays.T4|slice:"0:1" == '0' %}delay-zero{% endif %}">
+                        {{ item.delays.T4 }}
+                    </td>
+                    <td>
+                        {% if item.is_late %}
+                        <span class="badge bg-danger">{% trans "En Retard" %}</span>
+                        {% else %}
+                        <span class="badge bg-success">{% trans "Dans les Délais" %}</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div> {# End table-responsive #}
+    {% else %}
+    <p class="alert alert-info">{% trans "Aucun arrivage avec des délais à afficher pour le moment." %}</p>
+    {% endif %}
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const table = document.getElementById('arrivagesDelayTable');
+            if (!table) return;
+
+            const tbody = table.querySelector('tbody');
+            let allRows = Array.from(tbody.querySelectorAll('tr')); // Use let as it will be reordered by sort
+            const activeColumnFilters = {};
+            let currentSortColumn = null;
+            let currentSortDirection = 'asc'; // 'asc' or 'desc'
+
+            function applyFiltersAndSort() {
+                let filteredRows = allRows.filter(row => {
+                    let rowMatchesAllFilters = true;
+
+                    for (const columnIndex in activeColumnFilters) {
+                        const selectedValues = activeColumnFilters[columnIndex];
+
+                        if (selectedValues.length === 0) {
+                            continue; // If no values are selected for a filter, it means show all for that column
+                        }
+
+                        const cell = row.children[columnIndex];
+                        let comparisonValue = cell.textContent.trim();
+
+                        /* Handle "Statut Général" column text for filtering */
+                        if (columnIndex === '8') {
+                            const badge = cell.querySelector('.badge');
+                            if (badge) {
+                                comparisonValue = badge.textContent.trim();
+                            } else {
+                                comparisonValue = ''; // No badge found, treat as empty for this context
+                            }
+                        }
+
+                        if (!selectedValues.includes(comparisonValue)) {
+                            rowMatchesAllFilters = false;
+                            break;
+                        }
+                    }
+                    return rowMatchesAllFilters;
+                });
+
+                // Apply sorting
+                if (currentSortColumn !== null) {
+                    const columnType = table.querySelector(`th[data-column-index="${currentSortColumn}"]`).dataset.columnType;
+                    filteredRows.sort((rowA, rowB) => {
+                        let valueA = rowA.children[currentSortColumn].dataset.rawValue || rowA.children[currentSortColumn].textContent.trim();
+                        let valueB = rowB.children[currentSortColumn].dataset.rawValue || rowB.children[currentSortColumn].textContent.trim();
+
+                        if (columnType === 'number') {
+                            valueA = parseFloat(valueA);
+                            valueB = parseFloat(valueB);
+                        } else if (columnType === 'date') {
+                            valueA = new Date(valueA);
+                            valueB = new Date(valueB);
+                        }
+
+                        let comparison = 0;
+                        if (valueA > valueB) {
+                            comparison = 1;
+                        } else if (valueA < valueB) {
+                            comparison = -1;
+                        }
+
+                        return currentSortDirection === 'asc' ? comparison : -comparison;
+                    });
+                }
+
+                // Clear existing rows and append filtered/sorted rows
+                tbody.innerHTML = '';
+                if (filteredRows.length > 0) {
+                    filteredRows.forEach(row => tbody.appendChild(row));
+                } else {
+                    // Display a message if no rows match the filter
+                    const noResultsRow = document.createElement('tr');
+                    noResultsRow.innerHTML = `<td colspan="9" class="text-center py-4 text-muted">{% trans "Aucun résultat ne correspond aux filtres appliqués." %}</td>`;
+                    tbody.appendChild(noResultsRow);
+                }
+            }
+
+            /* --- COLUMN FILTER DROPDOWN LOGIC --- */
+            const filterableHeaders = table.querySelectorAll('th.filterable');
+
+            filterableHeaders.forEach(header => {
+                const columnIndex = header.dataset.columnIndex;
+                const columnType = header.dataset.columnType;
+                const filterDropdown = header.querySelector('.filter-dropdown');
+                const filterIcon = header.querySelector('.filter-icon');
+
+                filterIcon.addEventListener('click', function (event) {
+                    event.stopPropagation(); // Prevent the click from bubbling up and closing other dropdowns
+
+                    /* Close any other open dropdowns and remove active state */
+                    document.querySelectorAll('.filter-dropdown').forEach(dd => {
+                        if (dd !== filterDropdown) dd.style.display = 'none';
+                    });
+                    document.querySelectorAll('th.filterable').forEach(th => {
+                        if (th !== header) th.classList.remove('active');
+                    });
+
+                    /* Toggle visibility */
+                    filterDropdown.style.display = filterDropdown.style.display === 'block' ? 'none' : 'block';
+                    header.classList.toggle('active', filterDropdown.style.display === 'block');
+
+                    if (filterDropdown.style.display === 'block') {
+                        populateFilterDropdown(columnIndex, columnType, filterDropdown);
+                    }
+                });
+
+                /* Click outside to close dropdown */
+                document.addEventListener('click', function (event) {
+                    if (!header.contains(event.target)) {
+                        filterDropdown.style.display = 'none';
+                        header.classList.remove('active');
+                    }
+                });
+            });
+
+            function populateFilterDropdown(columnIndex, columnType, dropdownElement) {
+                dropdownElement.innerHTML = ''; // Clear previous content
+
+                const uniqueValues = new Set();
+                allRows.forEach(row => {
+                    const cell = row.children[columnIndex];
+                    let value = cell.textContent.trim();
+
+                    if (columnIndex === '8') { /* Special handling for "Statut Général" badge text */
+                        const badge = cell.querySelector('.badge');
+                        if (badge) {
+                            value = badge.textContent.trim();
+                        } else {
+                            value = ''; // No badge found, treat as empty for this context
+                        }
+                    }
+                    // No special date formatting for filter values, as we filter by raw text content here
+                    // Dates will be filtered by their 'd/m/Y' displayed format.
+
+                    if (value) { // Only add non-empty values
+                        uniqueValues.add(value);
+                    }
+                });
+
+                const sortedValues = Array.from(uniqueValues).sort((a, b) => a.localeCompare(b));
+
+                // Add "Select All" checkbox
+                const selectAllLabel = document.createElement('label');
+                const selectAllCheckbox = document.createElement('input');
+                selectAllCheckbox.type = 'checkbox';
+                selectAllCheckbox.checked = (!activeColumnFilters[columnIndex] || activeColumnFilters[columnIndex].length === 0 || activeColumnFilters[columnIndex].length === sortedValues.length); // All selected if no filter or all are in filter
+                selectAllCheckbox.classList.add('select-all-checkbox');
+                selectAllLabel.appendChild(selectAllCheckbox);
+                selectAllLabel.appendChild(document.createTextNode('{% trans "Tous sélectionner" %}'));
+                dropdownElement.appendChild(selectAllLabel);
+
+                selectAllCheckbox.addEventListener('change', function () {
+                    const checkboxes = dropdownElement.querySelectorAll('input[type="checkbox"]:not(.select-all-checkbox)');
+                    checkboxes.forEach(cb => cb.checked = this.checked);
+                    updateActiveFilters(columnIndex, dropdownElement);
+                });
+
+                // Add individual checkboxes
+                sortedValues.forEach(value => {
+                    const label = document.createElement('label');
+                    const checkbox = document.createElement('input');
+                    checkbox.type = 'checkbox';
+                    checkbox.value = value;
+                    // Check if this value was previously selected, or if no filter is active for this column
+                    checkbox.checked = !activeColumnFilters[columnIndex] || activeColumnFilters[columnIndex].includes(value);
+                    label.appendChild(checkbox);
+                    label.appendChild(document.createTextNode(value));
+                    dropdownElement.appendChild(label);
+
+                    checkbox.addEventListener('change', function () {
+                        const allSelected = Array.from(dropdownElement.querySelectorAll('input[type="checkbox"]:not(.select-all-checkbox)')).every(cb => cb.checked);
+                        selectAllCheckbox.checked = allSelected;
+                        // No need to call updateActiveFilters here, it will be called by the apply button
+                    });
+                });
+
+               const applyButton = document.createElement('button');
+                applyButton.classList.add('btn', 'btn-primary', 'btn-sm');
+                applyButton.textContent = '{% trans "Appliquer" %}';
+                applyButton.addEventListener('click', function () {
+                    updateActiveFilters(columnIndex, dropdownElement);
+                    dropdownElement.style.display = 'none'; // <-- C'est cette ligne qui ferme le dropdown
+                    table.querySelector(`th[data-column-index="${columnIndex}"]`).classList.remove('active');
+                });
+                dropdownElement.appendChild(applyButton);
+
+                // Initialize filters if not already set (e.g., on first load)
+                if (!activeColumnFilters[columnIndex]) {
+                    updateActiveFilters(columnIndex, dropdownElement);
+                }
+            }
+
+            function updateActiveFilters(columnIndex, dropdownElement) {
+                const selectedCheckboxes = dropdownElement.querySelectorAll('input[type="checkbox"]:not(.select-all-checkbox):checked');
+                activeColumnFilters[columnIndex] = Array.from(selectedCheckboxes).map(cb => cb.value);
+                applyFiltersAndSort(); // Re-apply filters and sort after selection changes
+            }
+
+            /* --- COLUMN SORTING LOGIC --- */
+            const sortableHeaders = table.querySelectorAll('th.sortable');
+
+            sortableHeaders.forEach(header => {
+                header.addEventListener('click', function () {
+                    const columnIndex = this.dataset.columnIndex;
+
+                    // Reset sort direction if a new column is clicked
+                    if (currentSortColumn !== columnIndex) {
+                        document.querySelectorAll('th.sortable').forEach(th => {
+                            th.classList.remove('asc', 'desc');
+                        });
+                        currentSortDirection = 'asc'; // Default to ascending for new column
+                    } else {
+                        // Toggle sort direction for the same column
+                        currentSortDirection = (currentSortDirection === 'asc') ? 'desc' : 'asc';
+                    }
+
+                    currentSortColumn = columnIndex;
+
+                    // Update header class for visual indicator
+                    this.classList.remove('asc', 'desc'); // Remove previous
+                    this.classList.add(currentSortDirection); // Add current
+
+                    applyFiltersAndSort(); // Apply sort after change
+                });
+            });
+
+            // Initial application of filters and sorting on page load
+            applyFiltersAndSort();
+        });
+    </script>
+</div>
+{% endblock %}

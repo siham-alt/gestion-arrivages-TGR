@@ -1,0 +1,191 @@
+{% extends 'base.html' %}
+
+{% load static %}
+{% load i18n %}
+
+{% block content %}
+<main class="container">
+    <section class="hero">
+        <div class="hero-content">
+            <h2>Suivi Intelligent des comptes de gestion</h2>
+            <p class="hero-text">Avec alertes en temps réel et statistiques détaillées pour une gestion efficace.</p>
+        </div>
+    </section>
+
+    <section class="features-overview">
+        <h2>Fonctionnalités en un coup d'œil</h2>
+        <div class="features-grid">
+            <div class="feature-item">
+                <i class="fas fa-plus-square fa-2x"></i>
+                <h3>saisie des pièces</h3>
+                <p>Enregistrez facilement de nouvelles pièces comptables avec tous les détails nécessaires.</p>
+            </div>
+            <div class="feature-item">
+                <i class="fas fa-chart-bar fa-2x"></i>
+                <h3>Statistiques avancées</h3>
+                <p>Visualisez les données par poste, type et période pour une analyse approfondie.</p>
+            </div>
+            <div class="feature-item">
+                <i class="fas fa-bell fa-2x"></i>
+                <h3>Alertes intelligentes</h3>
+                <p>Soyez informé automatiquement des retards et des échéances importantes.</p>
+            </div>
+        </div>
+    </section>
+</main>
+
+<div id="loginModal" class="modal">
+    <div class="modal-content">
+        <span class="close-button">&times;</span>
+        <h1>{% translate "Se connecter" %}</h1>
+        <div id="login-errors">
+            {% if form.errors %}
+                <div class="errorlist">
+                    <ul>
+                        {% for field in form %}
+                            {% for error in field.errors %}
+                                <li><strong>{{ field.label }}</strong> {{ error }}</li>
+                            {% endfor %}
+                        {% endfor %}
+                        {% for error in form.non_field_errors %}
+                            <li>{{ error }}</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            {% endif %}
+        </div>
+        <form id="login-form" method="post" action="{% url 'login' %}">
+            {% csrf_token %}
+            <div class="form-row">
+                <label for="{{ form.username.id_for_label }}">{% translate 'Nom d\'utilisateur:' %}</label>
+                {{ form.username }}
+            </div>
+            <div class="form-row">
+                <label for="{{ form.password.id_for_label }}">{% translate 'Mot de passe:' %}</label>
+                {{ form.password }}
+            </div>
+            <div class="submit-row">
+                <button type="submit">{% translate 'Se connecter' %}</button>
+                <input type="hidden" name="next" value="{% url 'admin:index' %}">
+            </div>
+            {% url 'admin_password_reset' as password_reset_url %}
+            {% if password_reset_url %}
+                <p class="password-reset-link">
+                    <a href="{{ password_reset_url }}">{% translate 'Mot de passe oublié ?' %}</a>
+                </p>
+            {% endif %}
+        </form>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        var loginModal = document.getElementById("loginModal");
+        var loginBtn = document.getElementById("loginBtn");
+        var closeBtn = document.querySelector(".close-button");
+        var loginForm = document.getElementById("login-form");
+        var loginErrorsDiv = document.getElementById("login-errors");
+
+        if (loginBtn) {
+            loginBtn.onclick = function() {
+                loginModal.style.display = "block";
+            }
+        }
+
+        if (closeBtn) {
+            closeBtn.onclick = function() {
+                loginModal.style.display = "none";
+            }
+        }
+
+        window.onclick = function(event) {
+            if (event.target == loginModal) {
+                loginModal.style.display = "none";
+            }
+        }
+
+        loginForm.addEventListener('submit', function(event) {
+            event.preventDefault();
+            var formData = new FormData(loginForm);
+
+            fetch('{% url "login" %}', {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    window.location.href = data.redirect_url;
+                } else {
+                    loginErrorsDiv.innerHTML = '<div class="errorlist"><ul><li>' + data.error + '</li></ul></div>';
+                }
+            })
+            .catch(error => {
+                loginErrorsDiv.innerHTML = '<div class="errorlist"><ul><li>Une erreur s\'est produite lors de la connexion.</li></ul></div>';
+            });
+        });
+    });
+</script>
+<style>
+    /* ... autres styles ... */
+
+    .features-overview {
+        padding: 2rem 0;
+        text-align: center;
+    }
+
+    .features-grid {
+        display: flex; /* Activer Flexbox */
+        justify-content: center; /* Centrer les éléments horizontalement */
+        gap: 2rem; /* Espacement entre les éléments */
+        margin-top: 1.5rem;
+    }
+
+    .feature-item {
+        background-color: #fff;
+        padding: 1.5rem;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        text-align: center;
+        /* Supprimer la largeur fixe pour qu'ils s'adaptent */
+        flex: 1; /* Les éléments grandiront de manière égale pour occuper l'espace disponible */
+        min-width: 250px; /* Définir une largeur minimale pour éviter qu'ils ne deviennent trop petits */
+    }
+
+    .feature-item i {
+        font-size: 2.5rem;
+        color: #e67e22;
+        margin-bottom: 1rem;
+    }
+
+    .feature-item h3 {
+        margin-top: 0;
+        margin-bottom: 0.5rem;
+        color: #333;
+    }
+
+    .feature-item p {
+        font-size: 0.9rem;
+        color: #666;
+    }
+
+    /* Supprimer ou commenter la media query qui forçait la colonne sur les petits écrans */
+    @media (max-width: 768px) {
+        .features-grid {
+            flex-direction: row; /* Maintenir l'affichage en ligne par défaut */
+            justify-content: space-around; /* Distribuer l'espace entre les éléments */
+            align-items: stretch; /* Étirer les éléments verticalement si nécessaire */
+            flex-wrap: wrap; /* Permettre le passage à la ligne si l'espace est insuffisant */
+        }
+
+        .feature-item {
+            width: calc(50% - 1rem); /* Occuper la moitié de la largeur avec un peu de marge */
+            margin-bottom: 1.5rem;
+        }
+    }
+</style>
+
+{% endblock %}

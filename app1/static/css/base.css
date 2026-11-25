@@ -1,0 +1,130 @@
+/*
+    Thème personnalisé pour l'interface d'administration de Django - GAC-TGR.
+    Utilisation des couleurs orange et gris de l'application.
+*/
+
+:root {
+    --primary-color: #e67e22; /* Orange principal */
+    --primary-darker: #d35400; /* Orange plus foncé (hover) */
+    --secondary-color: #f4f4f4; /* Gris clair (fond principal) */
+    --text-color: #333; /* Gris foncé (texte principal) */
+    --light-text-color: #fff; /* Blanc (texte sur fond orange) */
+    --border-color: #ddd; /* Gris moyen (bordures) */
+    --app-background: #f8f8f8; /* Fond des sections de l'admin */
+    --app-link-color: var(--primary-color); /* Couleur des liens dans l'admin */
+    --app-link-hover: var(--primary-darker); /* Couleur des liens au survol */
+    --app-header-background: var(--primary-color); /* Arrière-plan de l'en-tête de l'admin */
+    --app-header-color: var(--light-text-color); /* Couleur du texte de l'en-tête */
+    --app-module-header-background: #555; /* Arrière-plan des titres de modules (ex: APPM1) */
+    --app-module-header-color: var(--light-text-color); /* Couleur du texte des titres de modules */
+    --app-button-background: var(--primary-color); /* Arrière-plan des boutons */
+    --app-button-color: var(--light-text-color); /* Couleur du texte des boutons */
+    --app-button-hover-background: var(--primary-darker); /* Arrière-plan des boutons au survol */
+}
+
+body.login { /* Style pour la page de connexion */
+    background-color: var(--secondary-color);
+    color: var(--text-color);
+}
+
+div#container { /* Conteneur principal de l'admin */
+    background-color: var(--app-background);
+    color: var(--text-color);
+}
+
+#header { /* En-tête de l'admin - Ciblage principal */
+    background-color: var(--app-header-background) !important; /* Ajout de !important pour forcer l'écrasement */
+    color: var(--app-header-color) !important;
+}
+
+#header a { /* Liens dans l'en-tête */
+    color: var(--app-header-color) !important;
+}
+
+#header a:hover { /* Liens dans l'en-tête au survol */
+    color: var(--light-text-color) !important; /* Peut-être une couleur plus claire */
+}
+
+.module h2, .module caption, .module table thead th { /* Titres de modules, captions, en-têtes de tableau */
+    background: var(--app-module-header-background);
+    color: var(--app-module-header-color);
+}
+
+.module table thead th a, .module table thead th a:visited { /* Liens dans les en-têtes de tableau */
+    color: var(--app-module-header-color);
+}
+
+.module table thead th a:hover { /* Liens dans les en-têtes de tableau au survol */
+    color: var(--light-text-color);
+}
+
+.button, input[type=submit], input[type=button], .submit-row input[type=submit], .grp-button, a.grp-button { /* Boutons */
+    background-color: var(--app-button-background);
+    color: var(--app-button-color);
+    border: none;
+    border-radius: 4px;
+    padding: 0.5em 1em;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.button:hover, input[type=submit]:hover, input[type=button]:hover, .submit-row input[type=submit]:hover, .grp-button:hover, a.grp-button:hover { /* Boutons au survol */
+    background-color: var(--app-button-hover-background);
+}
+
+a { /* Liens généraux dans l'admin */
+    color: var(--app-link-color);
+    text-decoration: none;
+}
+
+a:hover { /* Liens généraux dans l'admin au survol */
+    color: var(--app-link-hover);
+    text-decoration: underline;
+}
+
+.module table tbody tr:nth-child(even) { /* Lignes paires des tableaux */
+    background-color: #fcfcfc; /* Un gris très clair pour la différenciation */
+}
+
+.module table tbody tr:hover { /* Lignes des tableaux au survol */
+    background-color: #f0f0f0; /* Un gris légèrement plus foncé au survol */
+}
+
+/* Ciblage plus spécifique de l'en-tête (à adapter si nécessaire) */
+#header {
+    background: var(--app-header-background) !important;
+    color: var(--app-header-color) !important;
+}
+
+#user-tools { /* Outils utilisateur en haut à droite */
+    color: var(--app-header-color) !important;
+}
+
+#user-tools a { /* Liens dans les outils utilisateur */
+    color: var(--app-header-color) !important;
+}
+
+#user-tools a:hover { /* Liens dans les outils utilisateur au survol */
+    color: var(--light-text-color) !important;
+}
+
+#site-name a { /* Titre du site dans l'en-tête */
+    color: var(--app-header-color) !important;
+}
+
+#site-name a:hover { /* Titre du site au survol */
+    color: var(--light-text-color) !important;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+

@@ -1,0 +1,531 @@
+{% extends 'admin/base_site.html' %}
+{% load static %}
+{% load i18n humanize %}
+
+{% block extrahead %}
+    {{ block.super }}      
+           <style>
+    /* General Body & Container */
+    body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f6f9; margin: 0; color: #333;}
+    .container.alertes-custom-container {
+        max-width: 95%; /* Réduit la largeur max pour laisser un peu de marge */
+        margin: 20px auto; /* Centre le conteneur avec une marge en haut et en bas */
+        padding: 20px;
+        background-color: #ffffff;
+        border-radius: 8px;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+    }
+
+    /* Titles */
+    .alertes-custom-title { margin-bottom: 1.5rem; text-align: center; color: #343a40; font-size: 2em; display: flex; align-items: center; justify-content: center; gap: 10px; }
+    .alertes-custom-title i { color: #007bff; font-size: 1.2em; }
+
+    /* Custom Alerts */
+    .alerte-imminente-custom, .alerte-depassee-custom, .alerte-aucune-custom {
+        padding: 15px;
+        margin-bottom: 1rem;
+        border-radius: 5px;
+        display: flex;
+        align-items: center;
+        font-size: 1.1em;
+    }
+    .alerte-imminente-custom { background-color: #fff3cd; border-left: 6px solid #ffc107; color: #856404; }
+    .alerte-depassee-custom { background-color: #f8d7da; border-left: 6px solid #dc3545; color: #721c24; }
+    .alerte-aucune-custom { background-color: #d4edda; border-left: 6px solid #28a745; color: #155724; }
+    .alerte-custom-icon { margin-right: 10px; font-size: 1.3em; }
+
+    .prochaines-deadlines-list { list-style: none; padding: 0; }
+    .prochaine-deadline-item {
+        background-color: #e9ecef;
+        border: 1px solid #dee2e6;
+        border-radius: 5px;
+        margin-bottom: 10px;
+        padding: 15px;
+        display: flex;
+        flex-direction: column;
+        position: relative;
+    }
+    .prochaine-deadline-item strong { color: #0056b3; font-size: 1.1em; margin-bottom: 5px; }
+    .prochaine-deadline-item p { margin: 0; color: #555; font-size: 0.9em; }
+    .jours-restants-badge {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        padding: 5px 10px;
+        border-radius: 15px;
+        font-size: 0.8em;
+        font-weight: bold;
+        color: white;
+        background-color: #6c757d; /* Default */
+    }
+    .jours-restants-badge.imminent { background-color: #ffc107; color: #343a40; }
+    .jours-restants-badge.urgent { background-color: #dc3545; }
+
+    /* Table Styling */
+    .table-responsive {
+        margin-top: 2rem;
+      /* Ajout de la barre de défilement horizontale si nécessaire */
+    }
+    .table {
+        width: 100%;
+        min-width: 1200px; /* Ajustez cette valeur selon le nombre de colonnes et leur contenu */
+        border-collapse: collapse;
+        background-color: #fff;
+        border-radius: 8px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+    }
+    .table th, .table td {
+        padding: 12px 18px;
+        text-align: left;
+        border-bottom: 1px solid #e0e0e0;
+        white-space: nowrap; /* Empêche le texte de passer à la ligne dans les cellules */
+    }
+    .table thead.table-dark th {
+        background-color: #343a40;
+        color: white;
+        font-weight: 600;
+        text-transform: uppercase;
+        font-size: 14px;
+    }
+    .table tbody tr:nth-child(even) { background-color: #f6f8fa; }
+    .table tbody tr:hover { background-color: #f1f1f1; }
+    .table-danger { background-color: #fdeded !important; } /* Light red for late rows */
+
+    /* Delay Cell Styling */
+    .delay-cell { font-weight: bold; }
+    .delay-positive { color: #dc3545; } /* Red for positive delays (late) */
+    .delay-negative { color: #28a745; } /* Green for negative delays (early) */
+    .delay-zero { color: #6c757d; } /* Grey for zero delay */
+
+    /* Badge Styling for Status */
+    .badge {
+        display: inline-block;
+        padding: .45em .8em;
+        font-size: .8em;
+        font-weight: 700;
+        line-height: 1;
+        color: #fff;
+        text-align: center;
+        white-space: nowrap;
+        vertical-align: baseline;
+        border-radius: .35rem;
+    }
+    .badge.bg-danger { background-color: #dc3545 !important; }
+    .badge.bg-success { background-color: #28a745 !important; }
+
+    /* Filter and Sort Icons/Dropdowns */
+    th.sortable, th.filterable {
+        cursor: pointer;
+        position: relative;
+    }
+    th .sort-icon, th .filter-icon {
+        margin-left: 8px;
+        color: rgba(255, 255, 255, 0.7);
+        transition: color 0.2s ease-in-out;
+    }
+    th:hover .sort-icon, th:hover .filter-icon {
+        color: white;
+    }
+    th.sortable.asc .sort-icon::before { content: "\f0de"; color: white; }
+    th.sortable.desc .sort-icon::before { content: "\f0dd"; color: white; }
+    th.sortable:not(.asc):not(.desc) .sort-icon::before { content: "\f0dc"; }
+
+    .filter-dropdown {
+        display: none;
+        position: absolute;
+        background-color: #fff;
+        box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+        padding: 12px;
+        z-index: 1000;
+        border-radius: 5px;
+        min-width: 200px;
+        max-height: 300px;
+        overflow-y: auto;
+        left: 0;
+        top: 100%;
+        border: 1px solid #504949;
+        color: #343a40;
+        transform: translateY(5px);
+    }
+    .filter-dropdown label {
+        display: flex;
+        align-items: center;
+        padding: 6px 0;
+        cursor: pointer;
+        white-space: nowrap;
+        font-size: 0.95em;
+    }
+    .filter-dropdown label:hover { background-color: #f1f1f1; }
+    .filter-dropdown input{ margin-right: 8px; vertical-align: middle; flex-shrink: 0; }
+    .filter-dropdown .btn {
+        width: 100%;
+        margin-top: 10px;
+        padding: 8px;
+        background-color: #007bff;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 0.9em;
+    }
+    .filter-dropdown .btn:hover { background-color: #0056b3; }
+
+    /* Basic Bootstrap-like alert info */
+    .alert.alert-info {
+        padding: 1rem;
+        margin-top: 1.5rem;
+        border: 1px solid #b8daff;
+        border-radius: .25rem;
+        background-color: #e0f2f7;
+        color: #004085;
+        text-align: center;
+    }
+</style>
+    
+{% endblock %}
+
+{% block content %}
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css" integrity="sha512-Evv84Mr4kqVGRNSgIGL/F/aIDqQb7xQ2vcrdIwxfjThSH8CSR7PBEakCr51Ck+w+/U6swU2Im1vVX0SVk9ABhg==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+
+    <div class="container alertes-custom-container">
+
+        {# --- TABLE STATUS SECTION --- #}
+        <h2 class="alertes-custom-title mt-5">
+            <i class="fas fa-shipping-fast"></i> {% trans "Alertes des delais " %}
+        </h2>
+        {% if arrivages_with_delays %}
+        <div class="table-responsive"> {# Added responsive wrapper for better mobile experience #}
+            <table class="table table-striped table-bordered" id="arrivagesDelayTable">
+                <thead class="table-dark">
+                    <tr>
+                        <th class="sortable" data-column-index="0" data-column-type="number">{% trans "Arrivage ID" %}
+                        </th>
+                        
+                        <th class="sortable" data-column-index="1" data-column-type="date">{% trans "Date Arrivage" %}
+                        </th>
+                        
+                        {# NEW COLUMNS FOR POSTE CODE AND LIBELLE - CORRECTED INDICES #}
+                        <th class="filterable sortable" data-column-index="2" data-column-type="text">{% trans "Code Poste" %}
+                            <span class="filter-icon fas fa-filter"> </span>
+                            <div class="filter-dropdown" id="filterDropdown-2"></div>
+                        </th>
+                        <th class="filterable sortable" data-column-index="3" data-column-type="text">{% trans "Type Poste" %} {# Changed from "Type Poste" to "Libellé Poste" for clarity #}
+                            <span class="filter-icon fas fa-filter"> </span>
+                            <div class="filter-dropdown" id="filterDropdown-3"></div>
+                        </th>
+                        {# END NEW COLUMNS #}
+
+                        <th class="filterable sortable" data-column-index="4" data-column-type="text">{% trans "Type de Pièce" %}
+                            <span class="filter-icon fas fa-filter"></span>
+                            <div class="filter-dropdown" id="filterDropdown-4"></div>
+                        </th>
+                        
+                        <th>{% trans "Trimestres Concernés" %}</th> {# Not sortable/filterable easily without custom logic for multiple values, Index 5 #}
+                        
+                        <th class="sortable" data-column-index="6" data-column-type="delay">{% trans "Délai T1" %}
+                        </th>
+                        <th class="sortable" data-column-index="7" data-column-type="delay">{% trans "Délai T2" %}
+                        </th>
+                        <th class="sortable" data-column-index="8" data-column-type="delay">{% trans "Délai T3" %}
+                        </th>
+                        <th class="sortable" data-column-index="9" data-column-type="delay">{% trans "Délai T4" %}
+                        </th>
+                        <th class="filterable sortable" data-column-index="10" data-column-type="text">{% translate "Utilisateur" %}
+                            <span class="filter-icon fas fa-filter"></span>
+                            <div class="filter-dropdown" id="filterDropdown-10"></div>
+                        </th>
+                        <th class="filterable sortable" data-column-index="11" data-column-type="text">{% trans "Statut Général" %}
+                            <span class="filter-icon fas fa-filter"> </span>
+                            <div class="filter-dropdown" id="filterDropdown-11"></div>
+                        </th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in arrivages_with_delays %}
+                    <tr {% if item.is_late %}class="table-danger"{% endif %}>
+                        <td data-raw-value="{{ item.arrivage.id }}">{{ item.arrivage.id }}</td> {# Index 0 #}
+                        <td data-raw-value="{{ item.arrivage.date_arrivage|date:"Y-m-d" }}">
+                            {{ item.arrivage.date_arrivage|date:"d/m/Y" }}
+                        </td> {# Index 1 #}
+                        
+                        {# NEW CELLS FOR POSTE CODE AND LIBELLE #}
+                        <td data-raw-value="{{ item.arrivage.poste.code }}">{{ item.arrivage.poste.code }}</td> {# Index 2 #}
+                        <td data-raw-value="{{ item.arrivage.poste.libelle }}">{{ item.arrivage.poste.libelle }}</td> {# Index 3 #}
+                        {# END NEW CELLS #}
+
+                        <td data-raw-value="{{ item.arrivage.type_piece.libelle }}">{{ item.arrivage.type_piece.libelle }}</td> {# Index 4 #}
+                        <td> {# Index 5 #}
+                            {% for trimestre in item.arrivage.trimestres.all %}
+                            T{{ trimestre.numero }}{% if not forloop.last %}, {% endif %}
+                            {% empty %}
+                                {% translate "Aucun" %}
+                            {% endfor %}
+                        </td>
+                        
+                        {# Apply specific styling based on delay value. Changed data-column-type to 'delay' for custom sort #}
+                        <td class="delay-cell {% if item.delays.T1 and item.delays.T1|first == '+' %}delay-positive{% elif item.delays.T1 and item.delays.T1|first == '0' %}delay-zero{% else %}delay-negative{% endif %}"
+                            data-raw-value="{% if item.delays.T1 %}{{ item.delays.T1|slice:"1:"|floatformat:"0" }}{% else %}0{% endif %}">
+                            {{ item.delays.T1 }}
+                        </td> {# Index 6 #}
+                        <td class="delay-cell {% if item.delays.T2 and item.delays.T2|first == '+' %}delay-positive{% elif item.delays.T2 and item.delays.T2|first == '0' %}delay-zero{% else %}delay-negative{% endif %}"
+                            data-raw-value="{% if item.delays.T2 %}{{ item.delays.T2|slice:"1:"|floatformat:"0" }}{% else %}0{% endif %}">
+                            {{ item.delays.T2 }}
+                        </td> {# Index 7 #}
+                        <td class="delay-cell {% if item.delays.T3 and item.delays.T3|first == '+' %}delay-positive{% elif item.delays.T3 and item.delays.T3|first == '0' %}delay-zero{% else %}delay-negative{% endif %}"
+                            data-raw-value="{% if item.delays.T3 %}{{ item.delays.T3|slice:"1:"|floatformat:"0" }}{% else %}0{% endif %}">
+                            {{ item.delays.T3 }}
+                        </td> {# Index 8 #}
+                        <td class="delay-cell {% if item.delays.T4 and item.delays.T4|first == '+' %}delay-positive{% elif item.delays.T4 and item.delays.T4|first == '0' %}delay-zero{% else %}delay-negative{% endif %}"
+                            data-raw-value="{% if item.delays.T4 %}{{ item.delays.T4|slice:"1:"|floatformat:"0" }}{% else %}0{% endif %}">
+                            {{ item.delays.T4 }}
+                        </td> {# Index 9 #}
+
+                        <td>{{ item.arrivage.user.username }}</td> {# Index 10 #}
+
+                        <td> {# Index 11 #}
+                            {% if item.is_late %}
+                                <span class="badge bg-danger">{% trans "En Retard" %}</span>
+                            {% else %}
+                                <span class="badge bg-success">{% trans "Dans les Délais" %}</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div> {# End table-responsive #}
+        {% else %}
+        <p class="alert alert-info">{% trans "Aucun arrivage avec des délais à afficher pour le moment." %}</p>
+        {% endif %}
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const table = document.getElementById('arrivagesDelayTable');
+            if (!table) return;
+
+            const tbody = table.querySelector('tbody');
+            let allRows = Array.from(tbody.querySelectorAll('tr')); // Use let as it will be reordered by sort
+            const activeColumnFilters = {};
+            let currentSortColumn = null;
+            let currentSortDirection = 'asc'; // 'asc' or 'desc'
+
+            function applyFiltersAndSort() {
+                let filteredRows = allRows.filter(row => {
+                    let rowMatchesAllFilters = true;
+
+                    for (const columnIndex in activeColumnFilters) {
+                        const selectedValues = activeColumnFilters[columnIndex];
+
+                        if (selectedValues.length === 0) {
+                            continue; // If no values are selected for a filter, it means show all for that column
+                        }
+
+                        const cell = row.children[columnIndex];
+                        let comparisonValue = cell.textContent.trim();
+
+                        /* Handle "Statut Général" column text for filtering */
+                        if (columnIndex === '11') { // Index for "Statut Général" is now 11
+                            const badge = cell.querySelector('.badge');
+                            if (badge) {
+                                comparisonValue = badge.textContent.trim();
+                            } else {
+                                comparisonValue = ''; // No badge found, treat as empty for this context
+                            }
+                        }
+
+                        if (!selectedValues.includes(comparisonValue)) {
+                            rowMatchesAllFilters = false;
+                            break;
+                        }
+                    }
+                    return rowMatchesAllFilters;
+                });
+
+                // Apply sorting
+                if (currentSortColumn !== null) {
+                    const columnType = table.querySelector(`th[data-column-index="${currentSortColumn}"]`).dataset.columnType;
+                    filteredRows.sort((rowA, rowB) => {
+                        let valueA = rowA.children[currentSortColumn].dataset.rawValue || rowA.children[currentSortColumn].textContent.trim();
+                        let valueB = rowB.children[currentSortColumn].dataset.rawValue || rowB.children[currentSortColumn].textContent.trim();
+
+                        if (columnType === 'number') {
+                            valueA = parseFloat(valueA);
+                            valueB = parseFloat(valueB);
+                        } else if (columnType === 'date') {
+                            valueA = new Date(valueA);
+                            valueB = new Date(valueB);
+                        } else if (columnType === 'delay') { // Handle delay sorting (e.g., +20 > -5)
+                            // Convert to number for comparison, handling '+' and '-'
+                            valueA = parseFloat(valueA.replace('+', '').replace('-', '')); // +20 -> 20, -5 -> -5, handle the sign
+                            valueB = parseFloat(valueB.replace('+', '').replace('-', ''));
+                        }
+
+
+                        let comparison = 0;
+                        if (valueA > valueB) {
+                            comparison = 1;
+                        } else if (valueA < valueB) {
+                            comparison = -1;
+                        }
+
+                        return currentSortDirection === 'asc' ? comparison : -comparison;
+                    });
+                }
+
+                // Clear existing rows and append filtered/sorted rows
+                tbody.innerHTML = '';
+                if (filteredRows.length > 0) {
+                    filteredRows.forEach(row => tbody.appendChild(row));
+                } else {
+                    // Display a message if no rows match the filter
+                    const noResultsRow = document.createElement('tr');
+                    // UPDATED: colspan should be 12 (number of columns)
+                    noResultsRow.innerHTML = `<td colspan="12" class="text-center py-4 text-muted">{% trans "Aucun résultat ne correspond aux filtres appliqués." %}</td>`;
+                    tbody.appendChild(noResultsRow);
+                }
+            }
+
+            const filterableHeaders = table.querySelectorAll('th.filterable');
+
+            filterableHeaders.forEach(header => {
+                const columnIndex = header.dataset.columnIndex;
+                const columnType = header.dataset.columnType;
+                const filterDropdown = header.querySelector('.filter-dropdown');
+                const filterIcon = header.querySelector('.filter-icon');
+
+                filterIcon.addEventListener('click', function (event) {
+                    event.stopPropagation(); // Prevent the click from bubbling up and closing other dropdowns
+
+                    /* Close any other open dropdowns and remove active state */
+                    document.querySelectorAll('.filter-dropdown').forEach(dd => {
+                        if (dd !== filterDropdown) dd.style.display = 'none';
+                    });
+                    document.querySelectorAll('th.filterable').forEach(th => {
+                        if (th !== header) th.classList.remove('active');
+                    });
+
+                    /* Toggle visibility */
+                    filterDropdown.style.display = filterDropdown.style.display === 'block' ? 'none' : 'block';
+                    header.classList.toggle('active', filterDropdown.style.display === 'block');
+
+                    if (filterDropdown.style.display === 'block') {
+                        populateFilterDropdown(columnIndex, columnType, filterDropdown);
+                    }
+                });
+
+                /* Click outside to close dropdown */
+                document.addEventListener('click', function (event) {
+                    if (!header.contains(event.target)) {
+                        filterDropdown.style.display = 'none';
+                        header.classList.remove('active');
+                    }
+                });
+            });
+
+            function populateFilterDropdown(columnIndex, columnType, dropdownElement) {
+                dropdownElement.innerHTML = ''; // Clear previous content
+
+                const uniqueValues = new Set();
+                allRows.forEach(row => {
+                    const cell = row.children[columnIndex]; // This is where the correct columnIndex is crucial
+                    let value = cell.textContent.trim();
+
+                    if (columnIndex === '11') { /* Special handling for "Statut Général" badge text - Index 11 */
+                        const badge = cell.querySelector('.badge');
+                        if (badge) {
+                            value = badge.textContent.trim();
+                        } else {
+                            value = ''; // No badge found, treat as empty for this context
+                        }
+                    }
+                    // No special date formatting for filter values, as we filter by raw text content here
+                    // Dates will be filtered by their 'd/m/Y' displayed format.
+
+                    if (value) { // Only add non-empty values
+                        uniqueValues.add(value);
+                    }
+                });
+
+                const sortedValues = Array.from(uniqueValues).sort((a, b) => a.localeCompare(b));
+
+                // Add "Select All" checkbox
+                const selectAllLabel = document.createElement('label');
+                const selectAllCheckbox = document.createElement('input');
+                selectAllCheckbox.type = 'checkbox';
+                selectAllCheckbox.checked = (!activeColumnFilters[columnIndex] || activeColumnFilters[columnIndex].length === 0 || activeColumnFilters[columnIndex].length === sortedValues.length); // All selected if no filter or all are in filter
+                selectAllCheckbox.classList.add('select-all-checkbox');
+                selectAllLabel.appendChild(selectAllCheckbox);
+                selectAllLabel.appendChild(document.createTextNode('{% trans "Tous sélectionner" %}'));
+                dropdownElement.appendChild(selectAllLabel);
+
+                selectAllCheckbox.addEventListener('change', function () {
+                    const checkboxes = dropdownElement.querySelectorAll('input[type="checkbox"]:not(.select-all-checkbox)');
+                    checkboxes.forEach(cb => cb.checked = this.checked);
+                    updateActiveFilters(columnIndex, dropdownElement);
+                });
+
+                // Add individual checkboxes
+                sortedValues.forEach(value => {
+                    const label = document.createElement('label');
+                    const checkbox = document.createElement('input');
+                    checkbox.type = 'checkbox';
+                    checkbox.value = value;
+                    // Check if this value was previously selected, or if no filter is active for this column
+                    checkbox.checked = !activeColumnFilters[columnIndex] || activeColumnFilters[columnIndex].includes(value);
+                    label.appendChild(checkbox);
+                    label.appendChild(document.createTextNode(value));
+                    dropdownElement.appendChild(label);
+
+                    checkbox.addEventListener('change', function () {
+                        const allSelected = Array.from(dropdownElement.querySelectorAll('input[type="checkbox"]:not(.select-all-checkbox)')).every(cb => cb.checked);
+                        selectAllCheckbox.checked = allSelected;
+                        // No need to call updateActiveFilters here, it will be called by the apply button
+                    });
+                });
+
+              const applyButton = document.createElement('button');
+                applyButton.classList.add('btn', 'btn-primary', 'btn-sm');
+                applyButton.textContent = '{% trans "Appliquer" %}';
+                applyButton.addEventListener('click', function () {
+                    updateActiveFilters(columnIndex, dropdownElement);
+                    dropdownElement.style.display = 'none'; // <-- C'est cette ligne qui ferme le dropdown
+                    table.querySelector(`th[data-column-index="${columnIndex}"]`).classList.remove('active');
+                });
+                dropdownElement.appendChild(applyButton);
+                // Initialize filters if not already set (e.g., on first load)
+                if (!activeColumnFilters[columnIndex]) {
+                    updateActiveFilters(columnIndex, dropdownElement);
+                }
+            }
+            function updateActiveFilters(columnIndex, dropdownElement) {
+                const selectedCheckboxes = dropdownElement.querySelectorAll('input[type="checkbox"]:not(.select-all-checkbox):checked');
+                activeColumnFilters[columnIndex] = Array.from(selectedCheckboxes).map(cb => cb.value);
+                applyFiltersAndSort(); // Re-apply filters and sort after selection changes
+            }
+            const sortableHeaders = table.querySelectorAll('th.sortable');
+            
+            sortableHeaders.forEach(header => {
+                header.addEventListener('click', function () {
+                    const columnIndex = this.dataset.columnIndex;
+
+                    // Reset sort direction if a new column is clicked
+                    if (currentSortColumn !== columnIndex) {
+                        document.querySelectorAll('th.sortable').forEach(th => {
+                            th.classList.remove('asc', 'desc');
+                        });
+                        currentSortDirection = 'asc'; // Default to ascending for new column
+                    } else {
+                        // Toggle sort direction for the same column
+                        currentSortDirection = (currentSortDirection === 'asc') ? 'desc' : 'asc';
+                    }
+                    currentSortColumn = columnIndex;
+                    this.classList.remove('asc', 'desc'); // Remove previous
+                    this.classList.add(currentSortDirection); // Add current
+
+                    applyFiltersAndSort(); // Apply sort after change
+                });
+            });
+            applyFiltersAndSort();
+        });
+    </script>
+</div>
+{% endblock %}

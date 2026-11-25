@@ -1,0 +1,15 @@
+{% extends "admin/base_site.html" %}
+{% load i18n %}
+{% load url from future %}
+
+{% block title %}{% translate "Log in" %}{% endblock %}
+
+{% block bodyclass %}{{ block.super }} login{% endblock %}
+
+{% block content %}
+    {% if user.is_authenticated %}
+        <script>window.location.href = '{% url "home" %}';</script>
+    {% else %}
+        <script>window.location.href = document.referrer || '{% url "home" %}';</script>
+    {% endif %}
+{% endblock %}

@@ -1,0 +1,466 @@
+{% extends 'admin/base_site.html' %}
+{% load static %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block extrahead %}
+    {{ block.super }}
+    <style>
+        /* Styles CSS pour améliorer l'apparence */
+        .container {
+            max-width: 900px;
+            margin: 20px auto;
+            padding: 20px;
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        h1, h2, h3 {
+            color: #333;
+            margin-bottom: 15px;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #555;
+        }
+        input[type="text"], input[type="number"], select {
+            width: calc(100% - 22px); 
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+            font-size: 16px;
+        }
+        .input-inline {
+            display: flex;
+            gap: 10px;
+            align-items: flex-end;
+            flex-wrap: wrap; 
+        }
+        .input-inline > div {
+            flex: 1;
+            min-width: 150px; 
+        }
+        .input-inline button {
+            white-space: nowrap;
+        }
+        .button {
+            background-color: #007bff;
+            color: white;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        .button.secondary {
+            background-color: #6c757d;
+        }
+        .button:hover {
+            opacity: 0.9;
+        }
+        .equation-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        .equation-table th, .equation-table td {
+            border: 1px solid #eee;
+            padding: 10px;
+            text-align: left;
+        }
+        .equation-table th {
+            background-color: #f2f2f2;
+            font-weight: bold;
+        }
+        .equation-table tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+        .equation-term {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .equation-term .remove-btn {
+            background-color: #dc3545;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        #equationFinale {
+            font-size: 1.2em;
+            font-weight: bold;
+            margin-top: 20px;
+            background-color: #e9ecef;
+            padding: 10px;
+            border-radius: 5px;
+        }
+        .message {
+            margin-top: 15px;
+            padding: 10px;
+            border-radius: 4px;
+            color: white;
+            font-weight: bold;
+            display: none; /* Masqué par défaut */
+        }
+        .message.success {
+            background-color: #28a745;
+        }
+        .message.error {
+            background-color: #dc3545;
+        }
+        /* Ajustements spécifiques pour les sélecteurs */
+        #selectCategorie,
+        #selectCode { 
+            width: 200px; 
+            padding: 5px; 
+            font-size: 16px; 
+            height: 38px; 
+        }
+        .form-group select { /* Règle générique pour les select dans form-group */
+            width: 200px;
+            padding: 5px;
+            font-size: 16px;
+            height: 38px;
+        }
+    </style>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h1>Créer une Nouvelle Équation </h1>
+
+    <div class="form-group">
+        <label for="equationNom">Nom de l'équation :</label>
+        <input type="text" id="equationNom" value="Nouvelle Équation" required>
+    </div>
+
+    <div class="form-group">
+        <label for="constanteC">Constante 'c' :</label>
+        <input type="number" id="constanteC" value="0.00" step="0.01">
+    </div>
+
+    <h2>Ajouter des Termes à l'Équation</h2>
+    <div class="form-group input-inline">
+        <div>
+            <label for="selectCategorie">Catégorie :</label>
+            <select id="selectCategorie">
+                <option value="">Sélectionnez une catégorie</option>
+                {% for cat in categories_disponibles %}
+                    <option value="{{ cat.id }}" data-category-name="{{ cat.nom }}">{{ cat.nom }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div>
+            <label for="selectCode">Libellé / Code :</label>
+            <select id="selectCode">
+                <option value="">Sélectionnez un élément</option>
+                {# Les options seront remplies dynamiquement par JavaScript #}
+            </select>
+        </div>
+        <div>
+            <label for="inputCoefficient">Coefficient :</label>
+            <input type="number" id="inputCoefficient" value="1.00" step="0.01">
+        </div>
+        <button id="addTermButton" class="button">Ajouter Terme</button>
+    </div>
+
+    <h3>Termes de l'Équation</h3>
+    <table class="equation-table">
+        <thead>
+            <tr>
+                <th>Catégorie</th>
+                <th>Libellé / Code</th>
+                <th>Coefficient</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody id="equationTermsBody">
+            {# Les termes ajoutés dynamiquement seront ici #}
+        </tbody>
+    </table>
+
+    <div class="form-group">
+        <label>Somme des coefficients :</label>
+        <span id="sommeCoefficients">0.00</span>
+        <p><small>(Ceci est la somme de *tous* les coefficients de l'équation)</small></p>
+    </div>
+
+    <div class="form-group">
+        <label>Équation Finale :</label>
+        <div id="equationFinale">y = 0.00</div>
+    </div>
+
+    <button id="saveEquationButton" class="button">Enregistrer l'Équation</button>
+    <div id="messageContainer" class="message"></div>
+</div>
+
+{# Balises json_script pour passer les données Django au JavaScript de manière sécurisée #}
+{{ type_pieces|json_script:"type_pieces_data" }}
+{{ postes|json_script:"postes_data" }}
+{{ matieres|json_script:"matieres_data" }}
+{{ categories_disponibles|json_script:"categories_data" }}
+
+<script type="text/javascript">
+    document.addEventListener('DOMContentLoaded', function() {
+        const selectCategorie = document.getElementById('selectCategorie');
+        const selectCode = document.getElementById('selectCode');
+        const inputCoefficient = document.getElementById('inputCoefficient');
+        const addTermButton = document.getElementById('addTermButton');
+        const equationTermsBody = document.getElementById('equationTermsBody');
+        const sommeCoefficientsSpan = document.getElementById('sommeCoefficients');
+        const equationFinaleDiv = document.getElementById('equationFinale');
+        const constanteCInput = document.getElementById('constanteC');
+        const equationNomInput = document.getElementById('equationNom');
+        const saveEquationButton = document.getElementById('saveEquationButton');
+        const messageContainer = document.getElementById('messageContainer');
+
+        // Parse Django data
+        const typePieces = JSON.parse(document.getElementById('type_pieces_data').textContent);
+        const postes = JSON.parse(document.getElementById('postes_data').textContent);
+        const matieres = JSON.parse(document.getElementById('matieres_data').textContent); 
+        const categories = JSON.parse(document.getElementById('categories_data').textContent);
+
+        let equationTerms = []; // Local array to store equation terms
+
+        // Dynamically determine which categories are 'Matiere' types from the passed data
+        // This set contains category IDs that are associated with any Matiere object.
+        const matiereCategoryIds = new Set(matieres.map(m => m.categorie_id.toString()));
+        
+        // Map category IDs to their names (optional, but good for debugging/future use)
+        const categoryNamesById = new Map(categories.map(cat => [cat.id.toString(), cat.nom]));
+
+        // Populate categoryDataMap for the "Libellé / Code" dropdown
+        const categoryDataMap = new Map();
+        
+        // Add TypePiece and Poste data
+        categories.forEach(cat => {
+            if (cat.nom === 'Type de Pièce') {
+                categoryDataMap.set(cat.id.toString(), typePieces);
+            } else if (cat.nom === 'Poste Comptable') {
+                categoryDataMap.set(cat.id.toString(), postes);
+            }
+        });
+
+        // Add Matiere data, grouped by their category
+        matieres.forEach(matiere => {
+            const categorieId = matiere.categorie_id.toString();
+            if (!categoryDataMap.has(categorieId)) {
+                categoryDataMap.set(categorieId, []); 
+            }
+            categoryDataMap.get(categorieId).push(matiere); 
+        });
+
+
+        // Function to update the code/label selector options
+        function updateCodeOptions() {
+            const selectedCategoryId = selectCategorie.value;
+            selectCode.innerHTML = '<option value="">Sélectionnez un élément</option>'; 
+
+            if (selectedCategoryId) {
+                const items = categoryDataMap.get(selectedCategoryId);
+                if (items) {
+                    items.forEach(item => { 
+                        const option = document.createElement('option');
+                        option.value = item.id; 
+                        option.textContent = item.libelle || item.code || `ID: ${item.id}`; 
+                        selectCode.appendChild(option);
+                    });
+                }
+            }
+        }
+
+        // Function to update the equation display and global sum of coefficients
+        function updateEquationDisplay() {
+            let globalSumCoefficients = 0; // Sum of ALL coefficients in the equation
+            let termsString = [];
+            const constante = parseFloat(constanteCInput.value || 0);
+
+            equationTerms.forEach(term => {
+                globalSumCoefficients += term.coefficient;
+                // Format coefficient with sign for equation string
+                termsString.push(`${term.coefficient >= 0 ? '+' : ''}${term.coefficient.toFixed(2)} * ${term.code_libelle}`);
+            });
+
+            sommeCoefficientsSpan.textContent = globalSumCoefficients.toFixed(2);
+            
+            let finalEquation = `y = ${constante.toFixed(2)}`;
+            if (termsString.length > 0) {
+                finalEquation += termsString.join(' ');
+            }
+            equationFinaleDiv.textContent = finalEquation;
+        }
+
+        // Add a term to the equation when "Ajouter Terme" button is clicked
+        addTermButton.addEventListener('click', function() {
+            const categorieId = selectCategorie.value;
+            const categorieName = selectCategorie.options[selectCategorie.selectedIndex]?.dataset.categoryName; 
+            const codeId = selectCode.value;
+            const codeLibelle = selectCode.options[selectCode.selectedIndex]?.textContent; 
+            const coefficient = parseFloat(inputCoefficient.value);
+
+            if (!categorieId || !codeId || isNaN(coefficient)) {
+                showMessage('Veuillez sélectionner une catégorie, un élément et entrer un coefficient valide.', 'error');
+                return;
+            }
+
+            // Check for duplicate terms (same category and same label/code)
+            const isDuplicate = equationTerms.some(term => 
+                term.categorie_id === categorieId && term.code_libelle === codeLibelle
+            );
+
+            if (isDuplicate) {
+                showMessage('Ce terme existe déjà dans l\'équation.', 'error');
+                return;
+            }
+
+            equationTerms.push({
+                categorie_id: categorieId,
+                categorie_name: categorieName,
+                code_id: codeId, 
+                code_libelle: codeLibelle, 
+                coefficient: coefficient
+            });
+
+            renderEquationTerms(); 
+            updateEquationDisplay(); 
+            showMessage('Terme ajouté !', 'success');
+
+            // Reset fields after adding
+            selectCategorie.value = '';
+            updateCodeOptions(); 
+            inputCoefficient.value = '1.00';
+        });
+
+        // Display terms in the HTML table
+        function renderEquationTerms() {
+            equationTermsBody.innerHTML = '';
+            equationTerms.forEach((term, index) => {
+                const row = equationTermsBody.insertRow();
+                row.innerHTML = `
+                    <td>${term.categorie_name}</td>
+                    <td>${term.code_libelle}</td>
+                    <td>${term.coefficient.toFixed(2)}</td>
+                    <td><button class="remove-btn button secondary" data-index="${index}">Supprimer</button></td>
+                `;
+            });
+
+            // Attach event listeners for remove buttons
+            document.querySelectorAll('.remove-btn').forEach(button => {
+                button.onclick = function() {
+                    const indexToRemove = parseInt(this.dataset.index);
+                    equationTerms.splice(indexToRemove, 1);
+                    renderEquationTerms(); 
+                    updateEquationDisplay(); 
+                    showMessage('Terme supprimé.', 'success');
+                };
+            });
+        }
+
+        // Event listeners for dynamic updates
+        selectCategorie.addEventListener('change', updateCodeOptions);
+        constanteCInput.addEventListener('input', updateEquationDisplay);
+
+        // Utility function to display messages (success/error)
+        function showMessage(message, type) {
+            messageContainer.textContent = message;
+            messageContainer.className = `message ${type}`; 
+            messageContainer.style.display = 'block'; 
+            setTimeout(() => {
+                messageContainer.style.display = 'none'; 
+            }, 3000);
+        }
+
+        // Click handler for the save button
+        saveEquationButton.addEventListener('click', function() {
+            const equationNom = equationNomInput.value.trim();
+            if (!equationNom) {
+                showMessage('Veuillez donner un nom à l\'équation.', 'error');
+                return;
+            }
+            if (equationTerms.length === 0) {
+                showMessage('Veuillez ajouter au moins un terme à l\'équation.', 'error');
+                return;
+            }
+
+            // --- CLIENT-SIDE GLOBAL VALIDATION for sum of coefficients for ALL "Matiere" terms ---
+            const epsilon = 0.001; 
+            let totalMatiereCoefficientsSum = 0;
+            let hasMatiereTerms = false;
+
+            equationTerms.forEach(term => {
+                const catId = term.categorie_id;
+                if (matiereCategoryIds.has(catId)) { // Only sum coefficients for 'Matiere' type categories
+                    totalMatiereCoefficientsSum += term.coefficient;
+                    hasMatiereTerms = true;
+                }
+            });
+
+            if (hasMatiereTerms) { // Only validate if at least one Matiere term is present
+                if (Math.abs(totalMatiereCoefficientsSum - 1.0) > epsilon) {
+                    showMessage(
+                        `La somme de tous les coefficients des termes de type "Matière" doit être égale à 1.00. La somme actuelle est de ${totalMatiereCoefficientsSum.toFixed(2)}.`, 
+                        'error'
+                    );
+                    return; // Stop the save process if client-side validation failed
+                }
+            } else {
+                // Optionally, if you want to force having at least one Matiere term
+                // showMessage('Veuillez ajouter au moins un terme de type "Matière" avec une somme de coefficients de 1.00.', 'error');
+                // return;
+            }
+            // --- END OF CLIENT-SIDE GLOBAL VALIDATION ---
+
+            // Prepare data to send to the server
+            const equationData = {
+                nom_equation: equationNom,
+                constante: parseFloat(constanteCInput.value || 0),
+                termes: equationTerms.map(term => ({
+                    categorie_id: term.categorie_id,
+                    code_libelle: term.code_libelle, 
+                    coefficient: term.coefficient
+                }))
+            };
+
+            fetch('{% url "sauvegarder_equation_ponderee" %}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token }}' 
+                },
+                body: JSON.stringify(equationData)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    showMessage(data.message, 'success');
+                    equationTerms = []; // Clear terms on successful save
+                    renderEquationTerms();
+                    updateEquationDisplay();
+                    equationNomInput.value = 'Nouvelle Équation'; // Reset form
+                    constanteCInput.value = '0.00';
+                } else {
+                    showMessage(data.message, 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Erreur lors de la sauvegarde:', error);
+                showMessage('Une erreur est survenue lors de l\'enregistrement. Vérifiez la console pour plus de détails.', 'error');
+            });
+        });
+
+        // Initial setup on page load
+        updateCodeOptions(); 
+        updateEquationDisplay(); 
+        renderEquationTerms();
+    });
+</script>
+{% endblock %}

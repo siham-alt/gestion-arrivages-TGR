@@ -1,0 +1,725 @@
+{% extends 'base.html' %}
+{% load i18n humanize %}
+
+{% block content %}
+    <head>
+        {# IMPORTANT: Include Font Awesome for icons. Add this in your base.html's <head> or here. #}
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"
+            integrity="sha512-..." crossorigin="anonymous" referrerpolicy="no-referrer" />
+        <style>
+            body {
+                font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+                background-color: #f4f6f9;
+                color: #333;
+                max-width: 1800px; /* Increased for a wider layout */
+                margin: 0 auto; /* Center the content */
+            }
+
+            /* New style for the header container */
+            .header-container {
+                display: flex;
+                justify-content: space-between; /* Pushes items to ends */
+                align-items: center; /* Vertically centers items */
+                margin-bottom: 2rem; /* Space below the header section */
+                flex-wrap: wrap; /* Allow wrapping on smaller screens */
+                gap: 1rem; /* Space between items if they wrap */
+            }
+
+            h1 {
+                margin: 0; /* Reset default margin to allow flexbox to control spacing */
+                text-align: center; /* Will be overridden by flexbox if .header-container is used */
+                color: #4e5761;
+                flex-grow: 1; /* Allows h1 to take up available space, pushing button to right */
+            }
+
+            .filter-options {
+                margin-bottom: 1.5rem;
+                display: flex;
+                flex-wrap: wrap;
+                gap: 1rem;
+                align-items: center;
+                justify-content: flex-start;
+            }
+
+            .filter-options label {
+                margin-right: 0.5rem;
+                font-weight: bold;
+                margin-bottom: 0;
+            }
+
+            .filter-options select,
+            .filter-options input[type="date"] {
+                padding: 0.75rem;
+                border: 1px solid #ddd;
+                border-radius: 4px;
+                box-sizing: border-box;
+                font-size: 1rem;
+                margin-right: 1rem;
+                margin-bottom: 0;
+            }
+
+            .filter-options button {
+                padding: 0.75rem 1.5rem;
+                background-color: #4e5761;
+                color: white;
+                border: none;
+                border-radius: 4px;
+                cursor: pointer;
+                font-size: 1rem;
+                transition: background-color 0.3s ease;
+                margin-bottom: 0;
+            }
+
+            .filter-options button:hover {
+                background-color: #35404a;
+            }
+
+            table {
+                width: 100%;
+                border-collapse: collapse;
+                background-color: #fff;
+                border-radius: 8px;
+                box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+                /* ADDITION: Minimum width for the table to enforce horizontal scrolling */
+                min-width: 1200px; /* Adjust this value to your desired minimum width */
+            }
+
+            th,
+            td {
+                padding: 14px 20px;
+                text-align: left;
+                white-space: nowrap; /* Prevent text wrapping in table cells by default */
+            }
+
+            th {
+                background-color: #4e5761;
+                color: white;
+                font-weight: 600;
+                text-transform: uppercase;
+                font-size: 14px;
+                position: relative; /* Needed for filter/sort icons */
+            }
+
+            th.filterable,
+            th.sortable {
+                cursor: pointer;
+                padding-right: 35px; /* Space for icon */
+            }
+
+            th .filter-icon,
+            th .sort-icon {
+                position: absolute;
+                right: 15px;
+                top: 50%;
+                transform: translateY(-50%);
+                font-size: 0.9em;
+                color: rgba(255, 255, 255, 0.8);
+                transition: color 0.2s ease, transform 0.2s ease;
+            }
+
+            th.filterable:hover .filter-icon,
+            th.filterable.active .filter-icon,
+            th.sortable:hover .sort-icon,
+            th.sortable.asc .sort-icon,
+            th.sortable.desc .sort-icon {
+                color: #f89e5a; /* Primary color for active icons */
+                transform: translateY(-50%) scale(1.1);
+            }
+
+            /* Specific styles for sort icons */
+            th.sortable.asc .sort-icon:before {
+                content: "\f0d8"; /* Font Awesome caret-up */
+            }
+            th.sortable.desc .sort-icon:before {
+                content: "\f0d7"; /* Font Awesome caret-down */
+            }
+
+            /* Filter Dropdown Styles */
+            .filter-dropdown {
+                position: absolute;
+                top: 100%;
+                left: 0;
+                z-index: 1000;
+                background-color: #fff;
+                border: 1px solid #ccc;
+                border-radius: 6px;
+                box-shadow: 0 6px 12px rgba(0, 0, 0, 0.175);
+                min-width: 200px;
+                padding: 15px;
+                display: none;
+                max-height: 300px;
+                overflow-y: auto;
+                color: #333;
+            }
+
+            .filter-dropdown label {
+                display: flex;
+                align-items: center;
+                margin-bottom: 8px;
+                font-weight: normal;
+                font-size: 0.95em;
+                cursor: pointer;
+            }
+
+            .filter-dropdown input[type="checkbox"] {
+                margin-right: 10px;
+                transform: scale(1.1);
+            }
+
+            .filter-dropdown button {
+                width: 100%;
+                margin-top: 15px;
+                font-size: 0.95em;
+                padding: 8px 15px;
+                border-radius: 5px;
+                background-color: #2980b9; /* Use a consistent button color */
+            }
+            .filter-dropdown button:hover {
+                background-color: #2471a3;
+            }
+
+
+            tr:nth-child(even) {
+                background-color: #f9f9f9;
+            }
+
+            tr:hover {
+                background-color: #f1f1f1;
+            }
+
+            a {
+                color: #2980b9;
+                text-decoration: none;
+                font-weight: bold;
+            }
+
+            a:hover {
+                text-decoration: underline;
+            }
+
+            p {
+                text-align: center;
+                color: #777;
+                font-size: 16px;
+                margin-top: 20px;
+            }
+
+            @media (max-width: 992px) {
+                body {
+                    padding: 1rem;
+                    max-width: 100%; /* Allow body to be fluid on smaller screens */
+                }
+                table {
+                    min-width: 1000px; /* Adjust min-width for tablets */
+                }
+            }
+
+            @media (max-width: 768px) {
+                .filter-options {
+                    flex-direction: column;
+                    align-items: flex-start;
+                }
+
+                .filter-options label,
+                .filter-options select,
+                .filter-options input[type="date"],
+                .filter-options button {
+                    margin-right: 0;
+                    margin-bottom: 1rem;
+                    width: 100%;
+                }
+
+                /* This makes the table responsive by stacking cells */
+                table {
+                    border: 0;
+                    min-width: 600px; /* Still apply a minimum width for horizontal scrolling */
+                    display: block; /* Important for table-responsive behavior */
+                    overflow-x: auto; /* Enable horizontal scroll */
+                }
+
+                thead {
+                    display: none; /* Hide table header on small screens */
+                }
+
+                tr {
+                    margin-bottom: 1rem;
+                    border: 1px solid #ddd;
+                    border-radius: 5px;
+                    padding: 10px;
+                    display: block; /* Each row becomes a block element */
+                }
+
+                td {
+                    padding: 10px;
+                    position: relative;
+                    padding-left: 50%; /* Make space for the data-label */
+                    text-align: right; /* Align actual data to the right */
+                    border-bottom: 1px solid #eee; /* Add a bottom border for separation */
+                }
+
+                td:last-child {
+                    border-bottom: 0; /* No border on the last cell of a row */
+                }
+
+                td::before {
+                    content: attr(data-label);
+                    position: absolute;
+                    left: 10px;
+                    top: 10px;
+                    font-weight: bold;
+                    text-transform: uppercase;
+                    color: #555;
+                    width: 45%; /* Give data-label a defined width */
+                    text-align: left; /* Align label to the left */
+                    white-space: normal; /* Allow label to wrap */
+                }
+                .header-container {
+                    flex-direction: column; /* Stack items vertically */
+                    align-items: flex-start; /* Align items to the start (left) */
+                }
+                 .header-container h1,
+                 .header-container .button.primary {
+                    width: 100%; /* Make them full width */
+                    text-align: left; /* Adjust text alignment for h1 */
+                 }
+                 .header-container .button.primary {
+                    margin-bottom: 0; /* Adjust margin for mobile */
+                 }
+            }
+
+            .back-button::before {
+                content: "❮";
+                font-size: 18px;
+            }
+            .back-button {
+                background-color: #b5b5b5;
+                color: rgb(7, 7, 7);
+                padding: 10px 20px;
+                border-radius: 8px;
+                cursor: pointer;
+                transition: background-color 0.3s ease;
+                font-size: 16px;
+                display: inline-flex;
+                align-items: center;
+                gap: 8px;
+                box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+                border: none;
+                margin-bottom: 20px; /* Add margin below the button */
+            }
+             .button.primary {
+                display: inline-flex;
+                align-items: center;
+                gap: 0.5rem;
+                background-color: #f89e5a;
+                color: white;
+                padding: 0.75rem 1.25rem;
+                border: none;
+                border-radius: 5px;
+                cursor: pointer;
+                font-size: 1rem;
+                text-decoration: none;
+                transition: background-color 0.3s ease;
+                /* Removed margin-bottom here as it's handled by .header-container gap */
+            }
+
+            .button.primary:hover {
+                background-color: #ff8a30;
+            }
+
+            .button.primary i {
+                font-size: 1.1rem;
+            }
+        </style>
+    </head>
+   <button class="back-button" onclick="window.history.back();">Retour</button>
+
+    <div class="header-container">
+        <h1>{% translate "Mes Arrivages" %}</h1>
+        <a href="{% url 'ajouter_arrivage' %}" class="button primary"><i class="fas fa-plus"></i> {% translate "Ajouter un Arrivage" %}</a>
+    </div>
+
+    <div class="filter-options">
+        <label for="date-filter">{% translate "Filtrer par date:" %}</label>
+        <input type="date" id="date-filter" name="date" value="{{ request.GET.date }}">
+
+        <button id="filter-button"><i class="fas fa-filter"></i>{% translate "Filtrer" %}</button>
+        <button id="reset-button"><i class="fas fa-undo"></i> {% translate "Réinitialiser" %}</button>
+    </div>
+
+    {% if arrivages %}
+        <div class="table-container"> {# Wrap table for better structure and future styling if needed #}
+            <table id="arrivagesTable">
+                <thead>
+                    <tr>
+                        <th class="sortable" data-column-index="0" data-column-type="date">{% translate "Date" %}
+                            <span class="sort-icon fas fa-sort"></span>
+                        </th>
+                        <th class="filterable" data-column-index="1" data-column-type="text">{% translate "Code du poste" %}
+                            <span class="filter-icon fas fa-filter"></span>
+                            <div class="filter-dropdown" id="filterDropdown-1"></div> {# Changed ID to match index #}
+                        </th>
+                        <th class="filterable" data-column-index="2" data-column-type="text">{% translate "Type du Poste" %}
+                            <span class="filter-icon fas fa-filter"></span>
+                            <div class="filter-dropdown" id="filterDropdown-2"></div> {# Changed ID to match index #}
+                        </th>
+                        <th class="filterable" data-column-index="3" data-column-type="text">{% translate "Type de Pièce" %}
+                            <span class="filter-icon fas fa-filter"></span>
+                            <div class="filter-dropdown" id="filterDropdown-3"></div>
+                        </th>
+                        <th class="filterable" data-column-index="4" data-column-type="text">{% translate "Trimestre" %}
+                            <span class="filter-icon fas fa-filter"></span>
+                            <div class="filter-dropdown" id="filterDropdown-4"></div>
+                        </th>
+                        <th class="filterable" data-column-index="5" data-column-type="text">{% translate "Comptables " %}
+                            <span class="filter-icon fas fa-filter"></span>
+                            <div class="filter-dropdown" id="filterDropdown-5"></div> {# Changed ID to match index #}
+                        </th>
+                        
+                        <th>{% translate "Actions" %}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for arrivage in arrivages %}
+                        <tr>
+                            <td data-label="Date" data-raw-value="{{ arrivage.date_arrivage|date:"Y-m-d" }}">{{ arrivage.date_arrivage|date:"d/m/Y" }}</td>
+                           <td data-label="Code Poste">{{ arrivage.poste.code }}</td> {# Index 1 #}
+                            <td data-label="Type Poste">{{ arrivage.poste.libelle }}</td> {# Index 2 #}
+                            <td data-label="Type de Pièce">{{ arrivage.type_piece }}</td> {# Index 3 #}
+
+                            <td data-label="Trimestre"> {# Index 4 #}
+                                {% for trimestre in arrivage.trimestres.all %}
+                                    T{{ trimestre.numero }}{% if not forloop.last %}, {% endif %}
+                                {% empty %}
+                                    {% translate "Aucun" %}
+                                {% endfor %}
+                            </td> 
+                            <td data-label="Comptables Concernés"> {# Index 5 #}
+                                {% for comptable in arrivage.comptables.all %}
+                                    {{ comptable.nomComplet }}{% if not forloop.last %}, {% endif %}
+                                {% empty %}
+                                    {% translate "Aucun" %}
+                                {% endfor %}
+                            </td>
+                            
+                            <td data-label="Actions">
+                                <a href="{% url 'modifier_arrivage' arrivage.id %}">{% translate "Modifier" %}</a>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div> {# End table-container #}
+    {% else %}
+        <p>{% translate "Aucun arrivage enregistré pour le moment." %}</p>
+    {% endif %}
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const table = document.getElementById('arrivagesTable');
+            if (!table) return; // Exit if table doesn't exist
+
+            const tbody = table.querySelector('tbody');
+            let allRows = Array.from(tbody.querySelectorAll('tr'));
+            let activeColumnFilters = {}; // Stores selected filter values for each column
+            let currentSortColumn = null;
+            let currentSortDirection = 'asc'; // 'asc' or 'desc'
+
+            // Get references to the date filter and buttons
+            const dateInput = document.getElementById('date-filter');
+            const filterButton = document.getElementById('filter-button');
+            const resetButton = document.getElementById('reset-button');
+
+            // --- Initialize filters and sort on page load ---
+            const filterableHeaders = table.querySelectorAll('th.filterable');
+            filterableHeaders.forEach(header => {
+                const columnIndex = header.dataset.columnIndex;
+                const columnType = header.dataset.columnType;
+                const filterDropdown = header.querySelector('.filter-dropdown');
+                populateFilterDropdown(columnIndex, columnType, filterDropdown, true); // Pass true to not apply filters immediately
+            });
+            applyFiltersAndSort(); // Apply filters and sort after initial population
+
+
+            function applyFiltersAndSort() {
+                let filteredRows = allRows.filter(row => {
+                    let rowMatchesAllFilters = true;
+
+                    // First, apply the date filter from the input field
+                    if (dateInput.value) {
+                        const rowDateStr = row.children[0].dataset.rawValue; // Assuming date is in the first column and has data-raw-value
+                        if (rowDateStr !== dateInput.value) {
+                            return false; // Row does not match the date filter
+                        }
+                    }
+
+                    // Then, apply column filters
+                    for (const columnIndex in activeColumnFilters) {
+                        const selectedValues = activeColumnFilters[columnIndex];
+
+                        if (selectedValues.length === 0) {
+                            continue; // If no values are selected for a filter, it means show all for that column
+                        }
+
+                        const cell = row.children[columnIndex];
+                        let comparisonValue = cell.textContent.trim();
+
+                        // Special handling for multi-value cells (Comptables, Trimestres)
+                        // This checks if any of the selected filter values are present in the cell's text
+                        const cellValues = comparisonValue.split(',').map(v => v.trim()).filter(v => v);
+                        let matchesAnySelected = false;
+                        if (cellValues.length > 0) {
+                            for (const selected of selectedValues) {
+                                if (cellValues.includes(selected)) {
+                                    matchesAnySelected = true;
+                                    break;
+                                }
+                            }
+                        } else {
+                            // If cell is empty, and "Aucun" is selected, it matches.
+                            // If cell is empty, and "Aucun" is NOT selected, it doesn't match.
+                            if (selectedValues.includes('Aucun')) {
+                                matchesAnySelected = true;
+                            }
+                        }
+
+                        if (!matchesAnySelected) {
+                            rowMatchesAllFilters = false;
+                            break;
+                        }
+                    }
+                    return rowMatchesAllFilters;
+                });
+
+                // Apply sorting
+                if (currentSortColumn !== null) {
+                    const columnType = table.querySelector(`th[data-column-index="${currentSortColumn}"]`).dataset.columnType;
+                    filteredRows.sort((rowA, rowB) => {
+                        let valueA = rowA.children[currentSortColumn].dataset.rawValue || rowA.children[currentSortColumn].textContent.trim();
+                        let valueB = rowB.children[currentSortColumn].dataset.rawValue || rowB.children[currentSortColumn].textContent.trim();
+
+                        if (columnType === 'number') {
+                            valueA = parseFloat(valueA);
+                            valueB = parseFloat(valueB);
+                        } else if (columnType === 'date') {
+                            // Ensure date parsing is consistent
+                            valueA = new Date(valueA);
+                            valueB = new Date(valueB);
+                        }
+
+                        let comparison = 0;
+                        if (valueA > valueB) {
+                            comparison = 1;
+                        } else if (valueA < valueB) {
+                            comparison = -1;
+                        }
+
+                        return currentSortDirection === 'asc' ? comparison : -comparison;
+                    });
+                }
+
+                // Clear existing rows and append filtered/sorted rows
+                tbody.innerHTML = '';
+                if (filteredRows.length > 0) {
+                    filteredRows.forEach(row => tbody.appendChild(row));
+                } else {
+                    const noResultsRow = document.createElement('tr');
+                    noResultsRow.innerHTML = `<td colspan="7" class="text-center py-4 text-muted">{% trans "Aucun résultat ne correspond aux filtres appliqués." %}</td>`; 
+                    tbody.appendChild(noResultsRow);
+                }
+
+                // Re-apply zebra stripping
+                Array.from(tbody.children).forEach((row, index) => {
+                    if (index % 2 === 1) { // Odd rows are 1, 3, 5... (0-indexed)
+                        row.style.backgroundColor = '#f9f9f9';
+                    } else {
+                        row.style.backgroundColor = '#fff';
+                    }
+                });
+            }
+
+            /* --- COLUMN FILTER DROPDOWN LOGIC --- */
+            filterableHeaders.forEach(header => {
+                const columnIndex = header.dataset.columnIndex;
+                const columnType = header.dataset.columnType;
+                const filterDropdown = header.querySelector('.filter-dropdown');
+                const filterIcon = header.querySelector('.filter-icon');
+
+                filterIcon.addEventListener('click', function (event) {
+                    event.stopPropagation(); // Prevent the click from bubbling up and closing other dropdowns
+
+                    document.querySelectorAll('.filter-dropdown').forEach(dd => {
+                        if (dd !== filterDropdown) dd.style.display = 'none';
+                    });
+                    document.querySelectorAll('th.filterable').forEach(th => {
+                        if (th !== header) th.classList.remove('active');
+                    });
+
+                    filterDropdown.style.display = filterDropdown.style.display === 'block' ? 'none' : 'block';
+                    header.classList.toggle('active', filterDropdown.style.display === 'block');
+
+                    if (filterDropdown.style.display === 'block') {
+                        populateFilterDropdown(columnIndex, columnType, filterDropdown, false);
+                    }
+                });
+
+                document.addEventListener('click', function (event) {
+                    if (!header.contains(event.target)) {
+                        filterDropdown.style.display = 'none';
+                        header.classList.remove('active');
+                    }
+                });
+            });
+
+            function populateFilterDropdown(columnIndex, columnType, dropdownElement, isInitialLoad = false) {
+                dropdownElement.innerHTML = ''; // Clear previous content
+
+                const uniqueValues = new Set();
+                allRows.forEach(row => {
+                    const cell = row.children[columnIndex];
+                    let value = cell.textContent.trim();
+
+                    // Handle multi-value fields by splitting them
+                    const individualValues = value.split(',').map(v => v.trim()).filter(v => v);
+                    if (individualValues.length > 0) {
+                        individualValues.forEach(val => uniqueValues.add(val));
+                    } else {
+                        uniqueValues.add('Aucun'); // For empty cells like "Aucun" Comptable/Trimestre
+                    }
+                });
+
+                const sortedValues = Array.from(uniqueValues).sort((a, b) => a.localeCompare(b));
+
+                // Add "Select All" checkbox
+                const selectAllLabel = document.createElement('label');
+                const selectAllCheckbox = document.createElement('input');
+                selectAllCheckbox.type = 'checkbox';
+                // Determine if "Select All" should be checked: if no filters are active for this column, or all values are selected
+                selectAllCheckbox.checked = (!activeColumnFilters[columnIndex] || activeColumnFilters[columnIndex].length === 0 || activeColumnFilters[columnIndex].length === sortedValues.length);
+                selectAllCheckbox.classList.add('select-all-checkbox');
+                selectAllLabel.appendChild(selectAllCheckbox);
+                selectAllLabel.appendChild(document.createTextNode('{% trans "Tous sélectionner" %}'));
+                dropdownElement.appendChild(selectAllLabel);
+
+                selectAllCheckbox.addEventListener('change', function () {
+                    const checkboxes = dropdownElement.querySelectorAll('input[type="checkbox"]:not(.select-all-checkbox)');
+                    checkboxes.forEach(cb => cb.checked = this.checked);
+                    // No immediate apply, wait for the apply button
+                });
+
+                sortedValues.forEach(value => {
+                    const label = document.createElement('label');
+                    const checkbox = document.createElement('input');
+                    checkbox.type = 'checkbox';
+                    checkbox.value = value;
+                    // Check if the value is in the currently active filters for this column
+                    checkbox.checked = !activeColumnFilters[columnIndex] || activeColumnFilters[columnIndex].includes(value);
+                    label.appendChild(checkbox);
+                    label.appendChild(document.createTextNode(value));
+                    dropdownElement.appendChild(label);
+
+                    checkbox.addEventListener('change', function () {
+                        const allSelected = Array.from(dropdownElement.querySelectorAll('input[type="checkbox"]:not(.select-all-checkbox)')).every(cb => cb.checked);
+                        selectAllCheckbox.checked = allSelected;
+                        // No immediate apply, wait for the apply button
+                    });
+                });
+
+                const applyButton = document.createElement('button');
+                applyButton.classList.add('btn', 'btn-primary', 'btn-sm');
+                applyButton.textContent = '{% trans "Appliquer" %}';
+                applyButton.addEventListener('click', function () {
+                    updateActiveFilters(columnIndex, dropdownElement);
+                    dropdownElement.style.display = 'none'; // Close dropdown after applying
+                    table.querySelector(`th[data-column-index="${columnIndex}"]`).classList.remove('active');
+                });
+                dropdownElement.appendChild(applyButton);
+
+                if (isInitialLoad) {
+                    updateActiveFilters(columnIndex, dropdownElement); // Apply filters for initial load
+                }
+            }
+
+            function updateActiveFilters(columnIndex, dropdownElement) {
+                const selectedCheckboxes = dropdownElement.querySelectorAll('input[type="checkbox"]:not(.select-all-checkbox):checked');
+                activeColumnFilters[columnIndex] = Array.from(selectedCheckboxes).map(cb => cb.value);
+                applyFiltersAndSort();
+            }
+
+            /* --- COLUMN SORTING LOGIC --- */
+            const sortableHeaders = table.querySelectorAll('th.sortable');
+
+            sortableHeaders.forEach(header => {
+                header.addEventListener('click', function () {
+                    const columnIndex = this.dataset.columnIndex;
+
+                    if (currentSortColumn !== columnIndex) {
+                        document.querySelectorAll('th.sortable').forEach(th => {
+                            th.classList.remove('asc', 'desc');
+                            // Reset sort icon if changing column
+                            const icon = th.querySelector('.sort-icon');
+                            if (icon) icon.className = 'sort-icon fas fa-sort';
+                        });
+                        currentSortDirection = 'asc';
+                    } else {
+                        currentSortDirection = (currentSortDirection === 'asc' ? 'desc' : 'asc');
+                    }
+                    currentSortColumn = columnIndex;
+
+                    this.classList.remove('asc', 'desc'); // Clear previous classes
+                    this.classList.add(currentSortDirection);
+
+                    // Update sort icon
+                    const icon = this.querySelector('.sort-icon');
+                    if (icon) {
+                        icon.className = `sort-icon fas fa-sort-${currentSortDirection === 'asc' ? 'up' : 'down'}`;
+                    }
+
+
+                    applyFiltersAndSort();
+                });
+            });
+
+            // Handle the top-level date filter and reset button (which is separate from column filters)
+            filterButton.addEventListener('click', function() {
+                // The date filter is handled directly in applyFiltersAndSort
+                applyFiltersAndSort();
+            });
+
+            resetButton.addEventListener('click', function() {
+                // Clear the date input field
+                dateInput.value = '';
+
+                // Clear all active column filters
+                activeColumnFilters = {};
+                filterableHeaders.forEach(header => {
+                    const columnIndex = header.dataset.columnIndex;
+                    const filterDropdown = header.querySelector('.filter-dropdown');
+                    // Re-populate dropdown to reset checkboxes to "Select All"
+                    populateFilterDropdown(columnIndex, header.dataset.columnType, filterDropdown, false);
+                });
+
+                // Reset sorting
+                currentSortColumn = null;
+                currentSortDirection = 'asc';
+                document.querySelectorAll('th.sortable').forEach(th => {
+                    th.classList.remove('asc', 'desc');
+                    const icon = th.querySelector('.sort-icon');
+                    if (icon) icon.className = 'sort-icon fas fa-sort';
+                });
+
+                // Apply all resets
+                applyFiltersAndSort();
+            });
+
+            // Set initial value for date filter if present in URL
+            const urlParams = new URLSearchParams(window.location.search);
+            const dateParam = urlParams.get('date');
+            if (dateParam) {
+                dateInput.value = dateParam;
+            } else {
+                // Ensure the date input is clear if no date is in the URL
+                dateInput.value = '';
+            }
+        });
+    </script>
+{% endblock %}

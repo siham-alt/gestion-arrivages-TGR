@@ -1,0 +1,35 @@
+
+{% extends 'base.html' %}
+{% load i18n humanize %}
+
+{% block content %}
+    <h1>{% translate "Tous les Arrivages" %}</h1>
+    <table>
+        <thead>
+            <tr>
+                <th>{% translate "Date" %}</th>
+                <th>{% translate "Poste Comptable" %}</th>
+                <th>{% translate "Code Poste" %}</th>
+                <th>{% translate "Type de Pièce" %}</th>
+                <th>{% translate "Trimestre" %}</th>
+                <th>{% translate "Nombre de Liasses" %}</th>
+                 <th>{% translate "Utilisateur" %}</th>
+                <th>{% translate "Statut" %}</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for arrivage in arrivages %}
+                <tr>
+                    <td data-label="Date">{{ arrivage.date_arrivage|date:"d/m/Y" }}</td>
+                    <td data-label="Poste Comptable">{{ arrivage.poste }}</td>
+                     <td data-label="Code Poste">{{ arrivage.poste.libelle }}</td>
+                    <td data-label="Type de Pièce">{{ arrivage.type_piece }}</td>
+                    <td data-label="Trimestre">{{ arrivage.trimestre }}</td>
+                    <td data-label="Nombre de Liasses">{{ arrivage.nombre_liasses|intcomma }}</td>
+                     <td data-label="Utilisateur">{{ arrivage.user.username }}</td>
+                    <td data-label="Statut">{{ arrivage.statut }}</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+{% endblock %}

@@ -1,0 +1,370 @@
+{% extends 'admin/base_site.html' %}
+{% load static %}
+
+{% block title %} Statistiques TGR{% endblock %}
+
+{% block extrahead %}
+    {{ block.super }}
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="{% static '/css/admin_stats.css' %}">
+    <script src="{% static '/js/admin_stats.js' %}"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" crossorigin="anonymous" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <style>
+        /* Add or adjust these styles as needed for better table presentation */
+        .details-table-container {
+            margin-top: 60px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px; /* Space between tables */
+        }
+        .details-table-container > div {
+            flex: 1; /* Allow tables to grow and shrink */
+            min-width: 300px; /* Minimum width for each table */
+            background-color: #f9f9f9;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        .details-table-container h4 {
+            color: #333;
+            margin-bottom: 10px;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 5px;
+        }
+        .details-table-container table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .details-table-container th,
+        .details-table-container td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        .details-table-container th {
+            background-color: #e9ecef;
+            font-weight: bold;
+        }
+        .dashboard-widget.wide-widget {
+             flex-basis: 100%; 
+        }
+        
+.card-body .form-inline {
+    display: flex; 
+    flex-wrap: wrap;
+    gap: 15px; 
+    align-items: flex-end; 
+    padding: 15px; 
+    background-color: #f8f9fa; 
+    border-radius: 8px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.08); 
+    margin-bottom: 25px; 
+}
+
+.card-body .form-inline .form-group {
+    margin-right: 0 !important; 
+    display: flex; 
+    flex-direction: column; 
+    align-items: flex-start;
+}
+
+.card-body .form-inline .form-group label {
+    margin-bottom: 5px; 
+    font-weight: 600; 
+    color: #495057;
+    font-size: 0.95rem; 
+}
+.card-body .form-inline .form-group .form-control {
+    height: 40px; 
+    min-width: 180px; 
+    border-radius: 5px; 
+    border: 1px solid #ced4da; 
+    background-color: #ffffff; 
+    box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.03); 
+}
+
+.card-body .form-inline .btn-primary {
+    height: 40px; 
+    padding: 0 20px; 
+    font-size: 1rem; 
+    border-radius: 5px; 
+    background-color: #f27934; 
+    border-color: #f27934;
+    transition: background-color 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease; /* Smooth transitions */
+}
+
+.card-body .form-inline .btn-primary:hover {
+    background-color: #c6652c; 
+    border-color: #f27934;
+    box-shadow: 0 4px 8px rgba(0, 123, 255, 0.2); 
+}
+
+.card-body {
+    padding: 1.25rem;
+}
+        
+    </style>
+{% endblock %}
+
+{% block content %}
+    <div class="dashboard-header">
+        <h1>Statistiques des Arrivages</h1>
+        <div class="export-buttons">
+            <button id="exportPdfButton" class="button" style="background-color: #dc3545; color: white;">
+                <i class="fas fa-file-pdf"></i> Exporter en PDF
+            </button>
+        </div>
+    </div>
+
+   <div class="row">
+    <div class="col-md-12">
+        <div class="card shadow mb-4">
+            <div class="card-body">
+                <form method="GET" action="{% url 'statistiques_tgr_admin' %}" class="form-inline">
+                    <div class="form-group mr-3">
+                        <label for="yearFilter" class="mr-2">Filtrer par Année :</label>
+                        <select class="form-control" id="yearFilter" name="year">
+                            <option value="all">Toutes les années</option>
+                            {% for year_option in available_years %}
+                                <option value="{{ year_option }}" {% if selected_year == year_option|stringformat:"s" %}selected{% endif %}>{{ year_option }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="form-group mr-3">
+                        <label for="trimestreFilter" class="mr-2">Filtrer par Trimestre :</label>
+                        <select class="form-control" id="trimestreFilter" name="trimestre">
+                            <option value="all">Tout</option>
+                            {% for trimestre_option in available_trimestres %}
+                                <option value="{{ trimestre_option }}" {% if selected_trimestre == trimestre_option|stringformat:"s" %}selected{% endif %}>Trimestre {{ trimestre_option }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary">Appliquer les Filtres</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+    <div class="dashboard-container" id="dashboardContent">
+        <div class="dashboard-widget total-arrivages-widget">
+            <h3>Total Arrivages</h3>
+            <div class="total-value">
+                <i class="fas fa-box-open"></i> {{ total_arrivages }}
+            </div>
+            <p>Nombre total d'arrivages enregistrés</p>
+        </div>
+
+        {# Conditional rendering for Arrivages by Year chart #}
+        {% if not selected_year or selected_year == 'all' %}
+        <div class="dashboard-widget">
+            <h3>Arrivages par Année</h3>
+            <canvas id="arrivagesParAnneeChart"
+                    data-labels="{% for stat in arrivages_par_annee_combined %}{{ stat.annee }}|{% endfor %}"
+                    data-data="{% for stat in arrivages_par_annee_combined %}{{ stat.total }}|{% endfor %}"></canvas>
+        </div>
+        {% endif %}
+
+        <div class="dashboard-widget">
+            <h3>Arrivages par Mois (
+                {% if selected_year == 'all' or not selected_year %}
+                    Tout
+                {% else %}
+                    {{ selected_year }}
+                {% endif %}
+            )</h3>
+            <canvas id="arrivagesParMoisChart"
+                    {# *** IMPORTANT CHANGE HERE *** #}
+                    data-labels="{% for stat in arrivages_par_mois_chart_data %}{{ stat.mois_nom }}|{% endfor %}"
+                    data-data="{% for stat in arrivages_par_mois_chart_data %}{{ stat.total }}|{% endfor %}"></canvas>
+        </div>
+   <div class="dashboard-widget large-widget">
+                <h3>Arrivages par Poste vs. Objectif (Année: 
+                    {% if selected_year == 'all' or not selected_year %}
+                        Tout
+                    {% else %}
+                        {{ selected_year|default:current_year }}
+                    {% endif %}
+                    {% if selected_trimestre %}, Trimestre: 
+                        {% if selected_trimestre == 'all' %}
+                            Tout
+                        {% else %}
+                            T{{ selected_trimestre }}
+                        {% endif %}
+                    {% endif %})
+                </h3>
+                <canvas id="arrivagesParPosteChart"></canvas>
+                {# CRITICAL FIX: The json_script output MUST be directly inside the HTML #}
+                {# It will generate the <script type="application/json" id="arrivages_poste_data">...</script> tag itself #}
+                {{ arrivages_par_poste_target_combined|json_script:"arrivages_poste_data" }}
+            </div>
+
+      {% comment %}
+    Only display "Arrivages par Trimestre" chart if no specific trimestre
+    is selected (i.e., 'all' or initial load).
+{% endcomment %}
+{% if not selected_trimestre or selected_trimestre == 'all' %}
+<div class="dashboard-widget">
+    <h3>Arrivages par Trimestre</h3>
+    <canvas id="arrivagesParTrimestreChart"
+            data-labels="{% for stat in arrivages_par_trimestre_combined %}'Trimestre {{ stat.numero }}'|{% endfor %}"
+            data-data="{% for stat in arrivages_par_trimestre_combined %}{{ stat.total }}|{% endfor %}"></canvas>
+</div>
+{% endif %}
+        
+        <div class="dashboard-widget">
+            <h3>Arrivages par Type de Pièce</h3>
+            <canvas id="arrivagesParTypePieceChart"
+                    data-labels="{% for stat in arrivages_par_type_piece_combined %}{{ stat.libelle }}|{% endfor %}"
+                    data-data="{% for stat in arrivages_par_type_piece_combined %}{{ stat.total }}|{% endfor %}"></canvas>
+        </div>
+
+        {# DETAILED TABLES SECTION #}
+        <div class="dashboard-widget wide-widget">
+            <h3>Détails des Arrivages</h3>
+            <div class="details-table-container">
+                {# Table for Arrivages by Year (only if no specific year is selected) #}
+                {% if not selected_year or selected_year == 'all' %}
+                <div>
+                    <h4>Par Année</h4>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Année</th>
+                                <th>Nombre Total</th>
+                                <th>En Retard</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for stat in arrivages_par_annee_combined %}
+                            <tr>
+                                <td>{{ stat.annee }}</td>
+                                <td>{{ stat.total }}</td>
+                                <td>{{ stat.en_retard }}</td>
+                            </tr>
+                            {% empty %}
+                            <tr><td colspan="3">Aucun arrivage par année.</td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% endif %}
+
+                {# Table for Arrivages by Month (Current Year / Selected Year) #}
+                <div>
+                    <h4>Par Mois (Année Actuelle / 
+                        {% if selected_year == 'all' or not selected_year %}
+                            Tout
+                        {% else %}
+                            {{ selected_year }}
+                        {% endif %}
+                    )</h4>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Mois</th>
+                                <th>Nombre Total</th>
+                                <th>En Retard</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {# *** IMPORTANT CHANGE HERE *** #}
+                            {% for stat in arrivages_par_mois_table_data %}
+                            <tr>
+                                <td>{{ stat.mois_nom }}</td> {# Display French month name #}
+                                <td>{{ stat.total }}</td>
+                                <td>{{ stat.en_retard }}</td>
+                            </tr>
+                            {% empty %}
+                            <tr><td colspan="3">Aucun arrivage par mois pour la période sélectionnée.</td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="details-table-container">
+                {# Table for Arrivages by Type de Pièce #}
+                <div>
+                    <h4>Par Type de Pièce</h4>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Type de Pièce</th>
+                                <th>Nombre Total</th>
+                                <th>En Retard</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for stat in arrivages_par_type_piece_combined %}
+                            <tr>
+                                <td>{{ stat.libelle }}</td>
+                                <td>{{ stat.total }}</td>
+                                <td>{{ stat.en_retard }}</td>
+                            </tr>
+                            {% empty %}
+                            <tr><td colspan="3">Aucun arrivage par type de pièce pour la période sélectionnée.</td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+
+                {# Table for Arrivages by Poste #}
+                <div>
+                    <h4>Par Poste</h4>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Poste</th>
+                                <th>Nombre Total</th>
+                                <th>En Retard</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for stat in arrivages_par_poste_simple_combined %} {# Using the simple combined for the table #}
+                            <tr>
+                                <td>{{ stat.libelle }}</td>
+                                <td>{{ stat.total }}</td>
+                                <td>{{ stat.en_retard }}</td>
+                            </tr>
+                            {% empty %}
+                            <tr><td colspan="3">Aucun arrivage par poste pour la période sélectionnée.</td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="details-table-container">
+                {# Table for Arrivages by Trimestre #}
+                {% if arrivages_par_trimestre_combined %}
+                <div>
+                    <h4>Par Trimestre</h4>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Trimestre</th>
+                                <th>Nombre Total</th>
+                                <th>En Retard</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for stat in arrivages_par_trimestre_combined %}
+                            <tr>
+                                <td>Trimestre {{ stat.numero }}</td>
+                                <td>{{ stat.total }}</td>
+                                <td>{{ stat.en_retard }}</td>
+                            </tr>
+                            {% empty %}
+                            <tr><td colspan="3">Aucun arrivage par trimestre pour la période sélectionnée.</td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+{% endblock %}

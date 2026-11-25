@@ -1,0 +1,35 @@
+{% extends 'base.html' %}
+{% load i18n %}
+
+{% block title %}{% translate "Profil Comptable" %}{% endblock %}
+
+{% block content %}
+<div style="font-family: 'Arial', sans-serif; background-color: #f4f4f4; padding: 20px; border-radius: 8px; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);">
+    <h1 style="color: #333; margin-bottom: 20px;">{% translate "Bienvenue" %}, <span style="color: #026f93;">{{ user.get_full_name|default:user.username }}</span> !</h1>
+
+    <div style="display: flex; gap: 20px; margin-bottom: 20px;">
+        <a href="{% url 'ajouter_arrivage' %}" style="background-color: #ff893b; color: white; padding: 15px 30px; text-decoration: none; border-radius: 8px; display: inline-flex; align-items: center; justify-content: center; transition: background-color 0.3s ease, box-shadow 0.3s ease; box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2); font-size: 18px; width: 250px; height: 60px;">
+            <span style="margin-right: 10px;">➕</span> {% translate "Ajouter un arrivage" %}
+        </a>
+        <a href="{% url 'consulter_envois' %}" style="background-color: #4f5456; color: white; padding: 15px 30px; text-decoration: none; border-radius: 8px; display: inline-flex; align-items: center; justify-content: center; transition: background-color 0.3s ease, box-shadow 0.3s ease; box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2); font-size: 18px; width: 250px; height: 60px;">
+            <span style="margin-right: 10px;">🔍</span> {% translate "Visualiser mes arrivages" %}
+        </a>
+         <a href="{% url 'alertes_page'  %}" style="background-color: #d34128; color: white; padding: 15px 30px; text-decoration: none; border-radius: 8px; display: inline-flex; align-items: center; justify-content: center; transition: background-color 0.3s ease, box-shadow 0.3s ease; box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2); font-size: 18px; width: 250px; height: 60px;">
+            <span style="margin-right: 10px;">🚨</span> {% translate "ALertes !" %}
+        </a>
+    </div>
+
+    <p style="font-size: 14px; color: #666;">C'est votre espace personnel. Vous pouvez ajouter de nouveaux arrivages et consulter ceux existants.</p>
+</div>
+<style>
+    .button:hover {
+        background-color: #367c39 !important;
+        box-shadow: 0 3px 7px rgba(0, 0, 0, 0.3) !important;
+    }
+
+    .button:active {
+        background-color: #2b5e2e !important;
+        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.3) !important;
+    }
+</style>
+{% endblock %}

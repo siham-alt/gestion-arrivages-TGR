@@ -1,0 +1,67 @@
+{% extends "admin/base.html" %}
+{% load static %}
+
+{% block title %}
+    {% if subtitle %}{{ subtitle }} | {% endif %}
+    {{ title }} | {{ site_title|default:_('Django site admin') }}
+{% endblock %}
+
+{% block branding %}
+    <div style="display: flex; align-items: center;">
+        <h1 id="site-name" style="margin-right: 20px;">
+            <a href="{% url 'admin:index' %}" style="color: white; text-decoration: none;">SCG-TGR</a>
+        </h1>
+        <nav>
+            <ul style="list-style: none; padding: 0; margin: 0; display: flex;">
+                <li style="margin-right: 15px;">
+                    <a href="{% url 'admin:app1_arrivage_changelist' %}" style="color: white; text-decoration: none; padding: 0.5em 0; margin: 80px;">
+                        📦 Arrivages
+                    </a>
+                </li>
+                 <li>
+                    <a href="{% url 'admin_alertes_page' %}" style="color: white; text-decoration: none; padding: 0.5em 0; margin:  40px;">
+                       🚨 alertes
+                    </a>
+                </li>
+                <li>
+                    <a href="{% url 'statistiques_tgr_admin' %}" style="color: white; text-decoration: none; padding: 0.5em 0; margin: 40px;">
+                        📊 Statistiques 
+                    </a>
+                </li>
+                 <li>
+                    <a href="{% url 'creer_equation_ponderee' %}" style="color: white; text-decoration: none; padding: 0.5em 0; margin: 50px;">
+                         eq 
+                    </a>
+                </li>
+            </ul>
+        </nav>
+    </div>
+{% endblock %}
+
+{% block nav-global %}{% endblock %}
+
+{% block extrahead %}
+    {{ block.super }}
+    <link rel="stylesheet" type="text/css" href="{% static 'css/base.css' %}">
+    <style>
+        /* Styles pour la barre de branding */
+        #branding {
+            background-color: var(--primary-color);
+            color: var(--light-text-color);
+            padding: 10px 20px;
+            display: flex;
+            align-items: center;
+            justify-content: flex-start;
+        }
+
+        #site-name a {
+            font-size: 1.8em;
+            font-weight: bold;
+        }
+
+        #branding nav ul li a {
+            font-size: 1.1em;
+        }
+        
+    </style>
+{% endblock %}

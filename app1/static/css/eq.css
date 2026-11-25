@@ -1,0 +1,243 @@
+body {
+    font-family: Arial, sans-serif;
+    background-color: #f4f7f6;
+    margin: 0;
+    padding: 20px;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    min-height: 100vh;
+}
+
+.container {
+    background-color: #ffffff;
+    border-radius: 8px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    padding: 30px;
+    width: 90%;
+    max-width: 1200px;
+}
+
+h1 {
+    text-align: center;
+    color: #333;
+    margin-bottom: 30px;
+    border-bottom: 2px solid #eee;
+    padding-bottom: 15px;
+}
+
+.main-content {
+    display: flex;
+    gap: 25px;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+.panel {
+    background-color: #fdfdfd;
+    border: 1px solid #e0e0e0;
+    border-radius: 6px;
+    padding: 20px;
+    flex: 1;
+    min-width: 300px;
+    max-width: 550px;
+    box-shadow: inset 0 1px 3px rgba(0,0,0,0.05);
+}
+
+.panel h2 {
+    color: #444;
+    margin-top: 0;
+    margin-bottom: 15px;
+    border-bottom: 1px dashed #eee;
+    padding-bottom: 10px;
+}
+
+.categories-list {
+    max-height: 400px; /* Hauteur fixe pour le défilement */
+    overflow-y: auto; /* Scrollbar verticale si le contenu dépasse */
+    padding: 10px;
+    border: 1px solid #e9e9e9;
+    border-radius: 4px;
+    background-color: #fff;
+}
+
+.matiere-item {
+    background-color: #e6f7ff;
+    border: 1px solid #91d5ff;
+    border-radius: 4px;
+    padding: 10px 15px;
+    margin-bottom: 8px;
+    cursor: grab;
+    transition: background-color 0.2s, transform 0.1s;
+    font-weight: bold;
+    color: #0056b3;
+}
+
+.matiere-item:hover {
+    background-color: #d6f0ff;
+}
+
+.matiere-item:active {
+    cursor: grabbing;
+    transform: scale(0.98);
+}
+
+.equation-panel {
+    min-height: 450px;
+    display: flex;
+    flex-direction: column;
+}
+
+.equation-zone {
+    flex-grow: 1;
+    border: 2px dashed #a0d911; /* Couleur pour la zone de drop */
+    border-radius: 6px;
+    padding: 15px;
+    min-height: 150px;
+    background-color: #f6ffed;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    transition: border-color 0.3s;
+}
+
+.equation-zone.drag-over {
+    border-color: #52c41a; /* Couleur quand on survole avec un élément */
+    background-color: #e6ffe6;
+}
+
+.placeholder-text {
+    color: #888;
+    text-align: center;
+    margin-top: 50px;
+    font-style: italic;
+}
+
+.equation-term {
+    display: flex;
+    align-items: center;
+    background-color: #fffbe6;
+    border: 1px solid #ffe58f;
+    border-radius: 4px;
+    padding: 8px 12px;
+    gap: 10px;
+}
+
+.equation-term .coefficient-input {
+    width: 70px;
+    padding: 5px;
+    border: 1px solid #d9d9d9;
+    border-radius: 3px;
+    text-align: right;
+    font-weight: bold;
+}
+
+.equation-term span {
+    font-weight: bold;
+    color: #d46b08;
+    flex-grow: 1;
+}
+
+.equation-term .remove-term {
+    background-color: #ff4d4f;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    padding: 5px 8px;
+    cursor: pointer;
+    font-weight: bold;
+    font-size: 0.9em;
+    transition: background-color 0.2s;
+}
+
+.equation-term .remove-term:hover {
+    background-color: #cf1322;
+}
+
+.equation-summary {
+    margin-top: 20px;
+    padding-top: 15px;
+    border-top: 1px solid #eee;
+}
+
+.equation-summary p, .equation-summary h3 {
+    margin-bottom: 8px;
+    color: #555;
+}
+
+.constant-input-group {
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.constant-input-group label {
+    font-weight: bold;
+    color: #444;
+}
+
+.constant-input-group input {
+    width: 80px;
+    padding: 5px;
+    border: 1px solid #d9d9d9;
+    border-radius: 3px;
+    text-align: right;
+    font-weight: bold;
+}
+
+.validation-message {
+    font-size: 0.9em;
+    min-height: 20px; /* Pour éviter le saut de mise en page */
+}
+
+.validation-message.error {
+    color: #cf1322;
+}
+
+.validation-message.success {
+    color: #52c41a;
+}
+
+#equation-display {
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 1.2em;
+    color: #0056b3;
+    background-color: #f0f8ff;
+    padding: 5px 10px;
+    border-radius: 4px;
+}
+
+.save-button {
+    background-color: #1890ff;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    padding: 12px 25px;
+    font-size: 1.1em;
+    cursor: pointer;
+    margin-top: 25px;
+    width: 100%;
+    transition: background-color 0.2s;
+}
+
+.save-button:hover:not(:disabled) {
+    background-color: #40a9ff;
+}
+
+.save-button:disabled {
+    background-color: #91d5ff;
+    cursor: not-allowed;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .main-content {
+        flex-direction: column;
+        align-items: center;
+    }
+    .panel {
+        max-width: 100%;
+        width: 100%;
+    }
+}
